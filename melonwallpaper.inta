@@ -1,6 +1,6 @@
 inta.stg:{namer,icon,background
-namer:app.name:["MelonWallpaper"],what.name=namer
-icon:app.ico:["🎨"],what.ico=icon
+namer:app.name:["Калькулятор"],what.name=namer
+icon:app.ico:["🧮"],what.ico=icon
 background:app.bg:[#0a1710],what.ico.bg=background
 }
 IL.cfg={scripts:all}
@@ -12,378 +12,351 @@ load.stop_parse.inta
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MelonWallpaper</title>
+<title>Калькулятор</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;background:#0a1710;color:#fff0f3;overflow:hidden}
+  html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;background:#0a1710;color:#fff0f3;overflow:hidden;user-select:none;-webkit-user-select:none}
   ::-webkit-scrollbar{display:none;width:0;height:0}
   *{scrollbar-width:none}
+
   .app{display:flex;flex-direction:column;height:100%}
-  .head{padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.25);flex-shrink:0}
-  .title{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:16px;font-weight:700}
-  .title .count{font-size:11.5px;opacity:.5;font-weight:400;margin-left:auto}
-  .search{width:100%;padding:9px 14px;border-radius:10px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);color:#fff0f3;outline:none;font-family:inherit;font-size:13px;margin-bottom:10px}
-  .search:focus{border-color:#ff4d6d}
-  .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
-  .chip{padding:6px 12px;border-radius:99px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#fff0f3;cursor:pointer;font-family:inherit;font-size:12px;white-space:nowrap;flex-shrink:0;transition:.15s}
-  .chip:hover{background:rgba(255,255,255,.1)}
-  .chip.on{background:linear-gradient(135deg,#ff4d6d,#c9184a);border-color:transparent;font-weight:600}
-  .body{flex:1;overflow-y:auto;padding:14px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
-  .tile{aspect-ratio:16/10;border-radius:12px;overflow:hidden;position:relative;cursor:pointer;border:2px solid transparent;transition:.15s;box-shadow:0 4px 14px rgba(0,0,0,.4);content-visibility:auto;contain-intrinsic-size:140px 88px}
-  .tile:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.5)}
-  .tile.current{border-color:#ff4d6d}
-  .tile .label{position:absolute;left:6px;bottom:6px;font-size:10.5px;background:rgba(0,0,0,.55);padding:3px 7px;border-radius:6px;backdrop-filter:blur(4px);max-width:calc(100% - 12px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .tile .cat-badge{position:absolute;top:6px;left:6px;font-size:9px;background:rgba(0,0,0,.6);padding:2px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:.5px;opacity:.85}
-  .tile .fav{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#ffd166;cursor:pointer;font-size:11px;line-height:1;display:grid;place-items:center;opacity:0;transition:.15s}
-  .tile:hover .fav{opacity:1}
-  .tile .fav.on{opacity:1}
-  .empty{text-align:center;padding:60px 20px;opacity:.4;font-size:13px}
-  .preview{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)}
-  .preview.on{display:flex;animation:fade .18s}
-  @keyframes fade{from{opacity:0}to{opacity:1}}
-  .prev-box{width:100%;max-width:780px;background:#12291f;border:1px solid rgba(255,255,255,.12);border-radius:16px;overflow-y:auto;overflow-x:hidden;box-shadow:0 30px 80px rgba(0,0,0,.7);max-height:calc(100vh - 32px);display:flex;flex-direction:column}
-  .prev-view{flex-shrink:0;height:min(40vh,320px);width:100%;position:relative;border-bottom:1px solid rgba(255,255,255,.08)}
-  .prev-info{padding:14px 20px 8px;flex-shrink:0}
-  .prev-info h3{font-size:16px;margin-bottom:4px}
-  .prev-info .meta{font-size:12px;opacity:.5}
-  .prev-actions{display:flex;gap:8px;padding:8px 20px 18px;flex-wrap:wrap;flex-shrink:0}
-  .btn{padding:10px 18px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff0f3;cursor:pointer;font-family:inherit;font-size:13px;transition:.15s}
-  .btn:hover{background:rgba(255,255,255,.14)}
-  .btn.primary{background:linear-gradient(135deg,#ff4d6d,#c9184a);border-color:transparent;font-weight:600;flex:1;min-width:140px}
-  .btn.primary:hover{filter:brightness(1.1)}
-  .btn.danger{background:rgba(201,24,74,.15);border-color:rgba(255,77,109,.4);color:#ffb3c1}
-  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,.9);padding:11px 20px;border-radius:11px;font-size:13px;z-index:200;opacity:0;pointer-events:none;transition:.22s;border:1px solid rgba(255,255,255,.12);box-shadow:0 12px 30px rgba(0,0,0,.5)}
-  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
-  @keyframes mwAurora{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+  .display{padding:20px 22px 18px;background:rgba(0,0,0,.3);border-bottom:1px solid rgba(255,255,255,.08);text-align:right;flex-shrink:0;position:relative}
+  .display .expr{font-size:13px;opacity:.4;min-height:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums;margin-bottom:6px}
+  .display .val{font-size:clamp(28px,6vw,48px);font-weight:300;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.1;letter-spacing:-.01em}
+  .display .mem-badge{position:absolute;top:10px;left:14px;font-size:10px;opacity:.5;background:rgba(255,255,255,.1);padding:2px 7px;border-radius:5px;display:none}
+  .display .mem-badge.on{display:inline-block}
+
+  .pads{flex:1;display:flex;flex-direction:column;padding:10px;gap:8px;min-height:0}
+  .row{display:flex;gap:8px;flex:1}
+
+  button.k{flex:1;border:0;border-radius:14px;font-family:inherit;font-size:clamp(16px,3.2vw,20px);font-weight:500;cursor:pointer;background:rgba(255,255,255,.06);color:#fff0f3;transition:.08s;display:grid;place-items:center;padding:0;min-height:0}
+  button.k:hover{background:rgba(255,255,255,.13)}
+  button.k:active{transform:scale(.96);background:rgba(255,255,255,.18)}
+
+  button.k.fn{background:rgba(255,255,255,.1);color:#b3a3ff}
+  button.k.fn:hover{background:rgba(255,255,255,.18)}
+
+  button.k.op{background:linear-gradient(135deg,#ff4d6d,#c9184a);color:#fff;font-weight:600}
+  button.k.op:hover{filter:brightness(1.1)}
+
+  button.k.eq{background:linear-gradient(135deg,#52b788,#2d6a4f);color:#fff;font-weight:700}
+  button.k.eq:hover{filter:brightness(1.1)}
+
+  button.k.dng{background:rgba(201,24,74,.2);color:#ffb3c1}
+  button.k.dng:hover{background:rgba(201,24,74,.35)}
+
+  .tabs{display:flex;background:rgba(0,0,0,.3);border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+  .tab{flex:1;padding:11px;background:transparent;border:0;color:#fff0f3;font-family:inherit;font-size:12.5px;cursor:pointer;opacity:.55;transition:.15s;border-bottom:2px solid transparent}
+  .tab:hover{opacity:.85;background:rgba(255,255,255,.04)}
+  .tab.on{opacity:1;border-bottom-color:#ff4d6d;font-weight:600}
+
+  .pane{display:none;flex:1;flex-direction:column;min-height:0}
+  .pane.on{display:flex}
+
+  .hist{flex:1;overflow-y:auto;padding:14px 18px}
+  .hist-item{padding:11px 13px;background:rgba(255,255,255,.04);border-radius:11px;margin-bottom:7px;cursor:pointer;transition:.12s;border:1px solid rgba(255,255,255,.06)}
+  .hist-item:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.12)}
+  .hist-item .e{font-size:11.5px;opacity:.5;font-variant-numeric:tabular-nums;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hist-item .r{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hist-empty{padding:50px 20px;text-align:center;opacity:.4;font-size:12.5px;line-height:1.6}
+  .hist-actions{padding:10px 18px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:8px;flex-shrink:0}
+  .hist-actions button{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff0f3;font-family:inherit;font-size:12.5px;cursor:pointer;transition:.15s}
+  .hist-actions button:hover{background:rgba(255,255,255,.14)}
+  .hist-actions button.danger{background:rgba(201,24,74,.15);border-color:rgba(255,77,109,.35);color:#ffb3c1}
+  .hist-actions button.danger:hover{background:rgba(201,24,74,.3)}
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="head">
-    <div class="title"><span>🎨 MelonWallpaper</span><span class="count" id="count">—</span></div>
-    <input class="search" id="search" placeholder="Поиск по названию или категории…" autocomplete="off">
-    <div class="chips" id="chips"></div>
+  <div class="tabs">
+    <button class="tab on" data-tab="calc">Калькулятор</button>
+    <button class="tab" data-tab="hist">История</button>
   </div>
-  <div class="body">
-    <div class="grid" id="grid"></div>
-    <div class="empty" id="empty" style="display:none">Ничего не найдено</div>
-  </div>
-</div>
 
-<div class="preview" id="prev">
-  <div class="prev-box">
-    <div class="prev-view" id="prevView"></div>
-    <div class="prev-info"><h3 id="prevName">—</h3><div class="meta" id="prevMeta">—</div></div>
-    <div class="prev-actions">
-      <button class="btn primary" id="prevApply">✨ Применить</button>
-      <button class="btn" id="prevFav">⭐ В избранное</button>
-      <button class="btn danger" id="prevReset">↺ Сбросить</button>
-      <button class="btn" id="prevClose">Закрыть</button>
+  <div class="pane on" data-pane="calc">
+    <div class="display">
+      <div class="mem-badge" id="mem">M</div>
+      <div class="expr" id="expr"></div>
+      <div class="val" id="val">0</div>
+    </div>
+    <div class="pads">
+      <div class="row">
+        <button class="k fn" data-act="mc">MC</button>
+        <button class="k fn" data-act="mr">MR</button>
+        <button class="k fn" data-act="m+">M+</button>
+        <button class="k fn" data-act="m-">M−</button>
+      </div>
+      <div class="row">
+        <button class="k dng" data-act="clear">C</button>
+        <button class="k dng" data-act="ce">CE</button>
+        <button class="k fn" data-act="back">⌫</button>
+        <button class="k op" data-op="/">÷</button>
+      </div>
+      <div class="row">
+        <button class="k" data-num="7">7</button>
+        <button class="k" data-num="8">8</button>
+        <button class="k" data-num="9">9</button>
+        <button class="k op" data-op="*">×</button>
+      </div>
+      <div class="row">
+        <button class="k" data-num="4">4</button>
+        <button class="k" data-num="5">5</button>
+        <button class="k" data-num="6">6</button>
+        <button class="k op" data-op="-">−</button>
+      </div>
+      <div class="row">
+        <button class="k" data-num="1">1</button>
+        <button class="k" data-num="2">2</button>
+        <button class="k" data-num="3">3</button>
+        <button class="k op" data-op="+">+</button>
+      </div>
+      <div class="row">
+        <button class="k" data-act="sign">±</button>
+        <button class="k" data-num="0">0</button>
+        <button class="k" data-act="dot">.</button>
+        <button class="k eq" data-act="eq">=</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pane" data-pane="hist">
+    <div class="hist" id="hist"></div>
+    <div class="hist-actions">
+      <button id="copyHist">📋 Скопировать</button>
+      <button class="danger" id="clearHist">🗑 Очистить</button>
     </div>
   </div>
 </div>
-
-<div class="toast" id="toast"></div>
 
 <script>
 (() => {
   "use strict";
   const $ = id => document.getElementById(id);
-  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-  const FAV = 'wmos:melonwall:favs';
+  /* === Безопасный storage (на file:// localStorage запрещён) === */
+  const memStore = {};
+  const Store = {
+    get(k) {
+      try { return localStorage.getItem(k); }
+      catch { return Object.prototype.hasOwnProperty.call(memStore, k) ? memStore[k] : null; }
+    },
+    set(k, v) {
+      try { localStorage.setItem(k, v); }
+      catch { memStore[k] = String(v); }
+    }
+  };
 
-  /* ============================================================
-     Отправляем обои родителю через postMessage
-     ============================================================ */
-  function sendWall(wall) {
+  const HIST_KEY = 'wmos:calculator:hist';
+  const MEM_KEY  = 'wmos:calculator:mem';
+
+  let current = '0';
+  let previous = null;
+  let op = null;
+  let justEvaluated = false;
+
+  let mem = 0;
+  try { mem = Number(Store.get(MEM_KEY) || 0) || 0; } catch { mem = 0; }
+
+  let hist = [];
+  try { hist = JSON.parse(Store.get(HIST_KEY) || '[]') || []; } catch { hist = []; }
+
+  const display = { val: $('val'), expr: $('expr'), mem: $('mem') };
+
+  function fmt(n) {
+    if (!isFinite(n)) return 'Деление на ноль';
+    const s = Math.abs(n) < 1e-10 ? '0' : String(n);
+    if (s.includes('e')) return s;
+    const [int, frac] = s.split('.');
+    const intF = Number(int).toLocaleString('ru-RU').replace(/,/g, ' ');
+    return frac ? intF + ',' + frac : intF;
+  }
+  function parseNumber(s) {
+    return Number(String(s).replace(/\s/g, '').replace(',', '.'));
+  }
+  const opSym = o => ({'+':'+','-':'−','*':'×','/':'÷'}[o] || o);
+
+  function update() {
+    display.val.textContent = current.length > 18 ? current.slice(0, 18) + '…' : current;
+    display.expr.textContent = previous != null && op != null
+      ? `${previous} ${opSym(op)}` : '';
+    display.mem.classList.toggle('on', mem !== 0);
+  }
+
+  function pushHistory(expr, result) {
+    hist.unshift({ expr, result, t: Date.now() });
+    if (hist.length > 100) hist.length = 100;
+    Store.set(HIST_KEY, JSON.stringify(hist));
+    renderHist();
+  }
+  function renderHist() {
+    const el = $('hist');
+    if (!hist.length) {
+      el.innerHTML = '<div class="hist-empty">Пока пусто<br>посчитай что-нибудь</div>';
+      return;
+    }
+    el.innerHTML = hist.map((h, i) => `
+      <div class="hist-item" data-idx="${i}">
+        <div class="e">${String(h.expr).replace(/</g,'&lt;')}</div>
+        <div class="r">= ${String(h.result).replace(/</g,'&lt;')}</div>
+      </div>
+    `).join('');
+  }
+
+  $('hist').addEventListener('click', e => {
+    const it = e.target.closest('[data-idx]'); if (!it) return;
+    const h = hist[+it.dataset.idx]; if (!h) return;
+    current = String(h.result).replace(/\s/g, '');
+    justEvaluated = true;
+    update();
+    document.querySelector('[data-tab="calc"]').click();
+  });
+
+  $('clearHist').addEventListener('click', () => {
+    if (!hist.length) return;
+    if (!confirm('Очистить историю?')) return;
+    hist = [];
+    Store.set(HIST_KEY, '[]');
+    renderHist();
+  });
+  $('copyHist').addEventListener('click', () => {
+    if (!hist.length) return;
+    const text = hist.map(h => `${h.expr} = ${h.result}`).join('\n');
     try {
-      window.parent.postMessage({ type: 'wmos:wall', payload: wall }, '*');
-    } catch (e) { console.warn('postMessage failed', e); }
-  }
-
-  /* ============================================================
-     Избранное — в localStorage iframe (у iframe свой на file://)
-     ============================================================ */
-  const loadFavs = () => { try { return JSON.parse(localStorage.getItem(FAV) || '[]'); } catch { return []; } };
-  const saveFavs = (arr) => { try { localStorage.setItem(FAV, JSON.stringify(arr)); } catch {} };
-
-  /* ============================================================
-     Генерация обоев
-     ============================================================ */
-  const WALLS = [];
-
-  // Диагональные градиенты — 350
-  for (let i = 0; i < 350; i++) {
-    const h1 = (i*3.2)%360, h2 = (h1+30+(i%10)*20)%360;
-    const s1 = 50+(i%4)*12, s2 = 45+(i%6)*8;
-    WALLS.push({ id:'grad'+i, name:`Градиент ${String(i+1).padStart(3,'0')}`, cat:'gradients', hue:h1,
-      css:`linear-gradient(${(i*13)%360}deg, hsl(${h1} ${s1}% 32%), hsl(${h2} ${s2}% 10%))` });
-  }
-  // Радиальные — 260
-  for (let i = 0; i < 260; i++) {
-    const h1 = (i*5.5)%360, h2 = (h1+180)%360;
-    WALLS.push({ id:'rad'+i, name:`Радиальный ${String(i+1).padStart(3,'0')}`, cat:'gradients', hue:h1,
-      css:`radial-gradient(circle at ${10+i%80}% ${15+i%70}%, hsl(${h1} 75% 48%), hsl(${h2} 55% 6%))` });
-  }
-  // Триколор — 180
-  for (let i = 0; i < 180; i++) {
-    const h1=(i*8)%360, h2=(h1+120)%360, h3=(h1+240)%360;
-    WALLS.push({ id:'tri'+i, name:`Триколор ${String(i+1).padStart(3,'0')}`, cat:'gradients', hue:h1,
-      css:`linear-gradient(${(i*17)%360}deg, hsl(${h1} 68% 38%), hsl(${h2} 68% 25%), hsl(${h3} 68% 10%))` });
-  }
-  // Паттерны — 130
-  for (let i = 0; i < 130; i++) {
-    const h=(i*12)%360, c1=`hsl(${h} 30% 10%)`, c2=`hsl(${(h+30)%360} 40% 22%)`, c3=`hsl(${(h+60)%360} 50% 30%)`;
-    const size=8+(i%28), ang=i*15, st=i%4;
-    let css;
-    if (st===0) css=`repeating-linear-gradient(${ang}deg, ${c1} 0 ${size}px, ${c2} ${size}px ${size*2}px)`;
-    else if (st===1) css=`repeating-conic-gradient(from ${ang}deg, ${c1} 0 25%, ${c2} 0 50%)`;
-    else if (st===2) css=`repeating-radial-gradient(circle at ${20+i%60}% ${20+i%60}%, ${c1} 0 ${size}px, ${c2} ${size}px ${size*2}px)`;
-    else css=`repeating-linear-gradient(${ang}deg, ${c1} 0 ${size}px, ${c2} ${size}px ${size*1.5}px, ${c3} ${size*1.5}px ${size*2.5}px)`;
-    WALLS.push({ id:'pat'+i, name:`Паттерн ${String(i+1).padStart(3,'0')}`, cat:'patterns', hue:h, css });
-  }
-  // Тёмные — 70
-  for (let i = 0; i < 70; i++) {
-    const h=(i*5.1)%360;
-    WALLS.push({ id:'dark'+i, name:`Тёмный ${String(i+1).padStart(2,'0')}`, cat:'dark', hue:h, css:`hsl(${h} 15% ${3+(i%10)}%)` });
-  }
-  // Светлые — 70
-  for (let i = 0; i < 70; i++) {
-    const h=(i*5.1)%360;
-    WALLS.push({ id:'light'+i, name:`Светлый ${String(i+1).padStart(2,'0')}`, cat:'light', hue:h, css:`hsl(${h} 30% ${85+(i%12)}%)` });
-  }
-
-  /* ============================================================
-     ЖИВЫЕ ОБОИ — 70
-     ============================================================ */
-  const LIVES = [];
-  const pushLive = (name, css, style) => LIVES.push({ id:'live'+LIVES.length, name, cat:'live', type:'live', css, style });
-  let aN = 0;
-
-  // Aurora 12
-  for (let i = 0; i < 12; i++) {
-    const h1=(i*30)%360, h2=(h1+40+i*5)%360, h3=(h1+120)%360;
-    const s1=40+i*3, s2=55+i*3, dur=10+i*2, an='au'+(aN++);
-    pushLive(`Aurora ${i+1}`,
-      `linear-gradient(120deg, hsl(${h1} ${s1}% 12%), hsl(${h2} ${s2}% 40%), hsl(${h3} ${s1}% 20%), hsl(${h1} ${s1}% 12%))`,
-      `@keyframes ${an}{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}} .wall{background:linear-gradient(120deg,hsl(${h1} ${s1}% 12%),hsl(${h2} ${s2}% 40%),hsl(${h3} ${s1}% 20%),hsl(${h1} ${s1}% 12%))!important;background-size:400% 400%!important;animation:${an} ${dur}s ease infinite!important}`);
-  }
-  // Neon 10
-  for (let i = 0; i < 10; i++) {
-    const h=(i*36)%360, dur=3+(i%4), an='ne'+(aN++);
-    pushLive(`Neon ${i+1}`,
-      `radial-gradient(circle at 50% 50%, hsl(${h} 90% 40%), hsl(${h} 90% 10%), #000)`,
-      `@keyframes ${an}{0%,100%{filter:brightness(.8) saturate(1)}50%{filter:brightness(1.5) saturate(1.6)}} .wall{background:radial-gradient(circle at 50% 50%,hsl(${h} 90% 40%),hsl(${h} 90% 10%),#000)!important;animation:${an} ${dur}s ease-in-out infinite!important}`);
-  }
-  // Fire 8
-  for (let i = 0; i < 8; i++) {
-    const h=i*20, dur=2+(i%3), an='fi'+(aN++);
-    pushLive(`Fire ${i+1}`,
-      `radial-gradient(circle at 50% 80%, hsl(${h+15} 100% 55%), hsl(${h} 80% 25%), #000)`,
-      `@keyframes ${an}{0%,100%{background-position:50% 80%}50%{background-position:50% 20%}} .wall{background:radial-gradient(circle at 50% 80%,hsl(${h+15} 100% 55%),hsl(${h} 80% 25%),#000)!important;background-size:100% 200%!important;animation:${an} ${dur}s ease-in-out infinite!important}`);
-  }
-  // Waves 8
-  for (let i = 0; i < 8; i++) {
-    const h1=(i*45)%360, h2=(h1+60)%360, dur=12+i, an='wa'+(aN++);
-    pushLive(`Waves ${i+1}`,
-      `radial-gradient(circle at 20% 30%, hsl(${h1} 60% 40%), transparent 50%), radial-gradient(circle at 80% 70%, hsl(${h2} 70% 30%), transparent 50%), hsl(${h1} 40% 10%)`,
-      `@keyframes ${an}{0%,100%{background-position:0% 0%,100% 100%,0 0}50%{background-position:100% 100%,0% 0%,0 0}} .wall{background:radial-gradient(circle at 20% 30%,hsl(${h1} 60% 40%),transparent 50%),radial-gradient(circle at 80% 70%,hsl(${h2} 70% 30%),transparent 50%),hsl(${h1} 40% 10%)!important;background-size:150% 150%,150% 150%,100% 100%!important;animation:${an} ${dur}s ease infinite!important}`);
-  }
-  // Matrix 6
-  for (let i = 0; i < 6; i++) {
-    const h=120+i*10, sp=(0.6+i*0.15).toFixed(2), an='ma'+(aN++);
-    pushLive(`Matrix ${i+1}`,
-      `repeating-linear-gradient(180deg, #000 0 15px, hsl(${h} 100% 50% / .2) 15px 16px, hsl(${h} 100% 50% / .4) 16px 17px)`,
-      `@keyframes ${an}{0%{background-position:0 0}100%{background-position:0 40px}} .wall{background:#000!important;background-image:repeating-linear-gradient(180deg,#000 0 15px,hsl(${h} 100% 50% / .15) 15px 16px,hsl(${h} 100% 50% / .35) 16px 17px)!important;animation:${an} ${sp}s linear infinite!important}`);
-  }
-  // Stars 6
-  for (let i = 0; i < 6; i++) {
-    const h=(i*60)%360, dur=4+i, an='st'+(aN++);
-    pushLive(`Stars ${i+1}`,
-      `radial-gradient(circle at 20% 30%, hsl(${h} 30% 90% / .6), transparent 2%), radial-gradient(circle at 70% 60%, hsl(${h} 30% 90% / .5), transparent 1.5%), hsl(${h} 40% 5%)`,
-      `@keyframes ${an}{0%,100%{opacity:.7}50%{opacity:1}} .wall{background:radial-gradient(circle at 20% 30%,hsl(${h} 30% 90% / .6),transparent 2%),radial-gradient(circle at 70% 60%,hsl(${h} 30% 90% / .5),transparent 1.5%),radial-gradient(circle at 40% 80%,hsl(${h} 30% 90% / .4),transparent 1%),radial-gradient(circle at 85% 25%,hsl(${h} 30% 90% / .5),transparent 1%),hsl(${h} 40% 5%)!important;animation:${an} ${dur}s ease-in-out infinite!important}`);
-  }
-  // Cyber 6
-  for (let i = 0; i < 6; i++) {
-    const h1=(i*60)%360, h2=(h1+180)%360, sp=(2+i*0.5).toFixed(1), an='cy'+(aN++);
-    pushLive(`Cyber ${i+1}`,
-      `linear-gradient(hsl(${h1} 100% 50% / .3) 1px, transparent 1px), linear-gradient(90deg, hsl(${h2} 100% 50% / .3) 1px, transparent 1px), #050510`,
-      `@keyframes ${an}{0%{background-position:0 0,0 0}100%{background-position:40px 40px,40px 40px}} .wall{background:#050510!important;background-image:linear-gradient(hsl(${h1} 100% 60% / .2) 1px,transparent 1px),linear-gradient(90deg,hsl(${h2} 100% 60% / .2) 1px,transparent 1px)!important;background-size:40px 40px,40px 40px!important;animation:${an} ${sp}s linear infinite!important}`);
-  }
-  // Chroma 6
-  for (let i = 0; i < 6; i++) {
-    const h=(i*60)%360, dur=8+i*2, an='ch'+(aN++);
-    pushLive(`Chroma ${i+1}`,
-      `conic-gradient(from 0deg, hsl(${h} 80% 40%), hsl(${h+60} 80% 40%), hsl(${h+120} 80% 40%), hsl(${h+180} 80% 40%), hsl(${h+240} 80% 40%), hsl(${h+300} 80% 40%), hsl(${h} 80% 40%))`,
-      `@keyframes ${an}{from{filter:hue-rotate(0)}to{filter:hue-rotate(360deg)}} .wall{background:conic-gradient(from 0deg,hsl(${h} 80% 40%),hsl(${h+60} 80% 40%),hsl(${h+120} 80% 40%),hsl(${h+180} 80% 40%),hsl(${h+240} 80% 40%),hsl(${h+300} 80% 40%),hsl(${h} 80% 40%))!important;animation:${an} ${dur}s linear infinite!important}`);
-  }
-  // Liquid 8
-  for (let i = 0; i < 8; i++) {
-    const h1=(i*45)%360, h2=(h1+90)%360, h3=(h1+180)%360, dur=15+i, an='li'+(aN++);
-    pushLive(`Liquid ${i+1}`,
-      `radial-gradient(circle at 30% 40%, hsl(${h1} 70% 45%), transparent 40%), radial-gradient(circle at 70% 60%, hsl(${h2} 70% 40%), transparent 40%), radial-gradient(circle at 50% 20%, hsl(${h3} 70% 35%), transparent 40%), hsl(${h1} 30% 8%)`,
-      `@keyframes ${an}{0%,100%{background-position:0% 0%,100% 100%,50% 50%,0 0}33%{background-position:30% 70%,70% 30%,20% 80%,0 0}66%{background-position:80% 10%,10% 90%,80% 20%,0 0}} .wall{background:radial-gradient(circle at 30% 40%,hsl(${h1} 70% 45%),transparent 40%),radial-gradient(circle at 70% 60%,hsl(${h2} 70% 40%),transparent 40%),radial-gradient(circle at 50% 20%,hsl(${h3} 70% 35%),transparent 40%),hsl(${h1} 30% 8%)!important;background-size:150% 150%,150% 150%,150% 150%,100% 100%!important;animation:${an} ${dur}s ease-in-out infinite!important}`);
-  }
-  // Glitch 4
-  for (let i = 0; i < 4; i++) {
-    const h=(i*90)%360, an='gl'+(aN++);
-    pushLive(`Glitch ${i+1}`,
-      `linear-gradient(45deg, hsl(${h} 80% 20%), #000, hsl(${h+60} 80% 30%))`,
-      `@keyframes ${an}{0%,100%{filter:hue-rotate(0) contrast(1)}25%{filter:hue-rotate(30deg) contrast(1.3)}50%{filter:hue-rotate(-20deg) contrast(.9)}75%{filter:hue-rotate(15deg) contrast(1.2)}} .wall{background:linear-gradient(45deg,hsl(${h} 80% 20%),#000,hsl(${h+60} 80% 30%))!important;animation:${an} 4s steps(6) infinite!important}`);
-  }
-  // Cosmic 5
-  for (let i = 0; i < 5; i++) {
-    const h1=(i*72)%360, h2=(h1+180)%360, dur=20+i*2, an='co'+(aN++);
-    pushLive(`Cosmic ${i+1}`,
-      `radial-gradient(circle at 30% 40%, hsl(${h1} 80% 30% / .7), transparent 40%), radial-gradient(circle at 70% 60%, hsl(${h2} 80% 30% / .7), transparent 40%), #000`,
-      `@keyframes ${an}{0%,100%{background-position:0% 0%,100% 100%}50%{background-position:60% 60%,40% 40%}} .wall{background:radial-gradient(circle at 30% 40%,hsl(${h1} 80% 30% / .7),transparent 40%),radial-gradient(circle at 70% 60%,hsl(${h2} 80% 30% / .7),transparent 40%),#000!important;background-size:200% 200%,200% 200%,100% 100%!important;animation:${an} ${dur}s ease infinite!important}`);
-  }
-
-  // День-Ночь — 3 (автосмена 3 мин)
-  const DN = [
-    { d1:'#87ceeb', d2:'#ffd580', s1:'#ff6b35', s2:'#c9184a', n1:'#1a1a3e', n2:'#0a0a1f' },
-    { d1:'#a8e6cf', d2:'#ffd3b6', s1:'#ffaaa5', s2:'#c76b9a', n1:'#2a1a3e', n2:'#0a0a1f' },
-    { d1:'#f0e6d2', d2:'#ff9966', s1:'#c9184a', s2:'#6a0032', n1:'#1a0a2e', n2:'#050510' },
-  ];
-  DN.forEach((c, i) => {
-    const an = 'dn'+(aN++);
-    const dur = 360;
-    pushLive(`🌗 День-Ночь ${i+1} (авто 3 мин)`,
-      `linear-gradient(90deg, ${c.d1} 0%, ${c.d2} 15%, ${c.s1} 30%, ${c.s2} 40%, ${c.n1} 50%, ${c.n2} 65%, ${c.n1} 75%, ${c.s1} 85%, ${c.d2} 92%, ${c.d1} 100%)`,
-      `@keyframes ${an}{0%,45%{background-position:0% 50%}50%,95%{background-position:100% 50%}100%{background-position:0% 50%}} .wall{background:linear-gradient(90deg,${c.d1} 0%,${c.d2} 15%,${c.s1} 30%,${c.s2} 40%,${c.n1} 50%,${c.n2} 65%,${c.n1} 75%,${c.s1} 85%,${c.d2} 92%,${c.d1} 100%)!important;background-size:200% 100%!important;animation:${an} ${dur}s ease-in-out infinite!important}`);
-  });
-
-  LIVES.forEach(l => WALLS.push(l));
-  $('count').textContent = WALLS.length + ' обоев';
-
-  const CATS = [
-    { id:'all', name:'Все' },
-    { id:'live', name:'✨ Живые' },
-    { id:'gradients', name:'Градиенты' },
-    { id:'patterns', name:'Паттерны' },
-    { id:'dark', name:'Тёмные' },
-    { id:'light', name:'Светлые' },
-    { id:'favs', name:'⭐ Избранное' },
-  ];
-
-  let currentCat = 'all', query = '', favs = loadFavs(), activeId = null;
-
-  const chipsEl = $('chips');
-  function renderChips() {
-    chipsEl.innerHTML = CATS.map(c =>
-      `<button class="chip ${c.id===currentCat?'on':''}" data-cat="${c.id}">${esc(c.name)}${c.id==='favs'?` (${favs.length})`:''}</button>`
-    ).join('');
-  }
-  chipsEl.addEventListener('click', e => {
-    const b = e.target.closest('[data-cat]'); if (!b) return;
-    currentCat = b.dataset.cat; renderChips(); renderGrid();
-  });
-
-  const gridEl = $('grid'), emptyEl = $('empty');
-  function matchesFilter(w) {
-    if (currentCat === 'favs') return favs.includes(w.id);
-    if (currentCat !== 'all' && w.cat !== currentCat) return false;
-    if (query) {
-      const q = query.toLowerCase();
-      if (!w.name.toLowerCase().includes(q) && !w.cat.toLowerCase().includes(q)) return false;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      } else throw 0;
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand('copy'); } catch {}
+      ta.remove();
     }
-    return true;
-  }
-  function renderGrid() {
-    const list = WALLS.filter(matchesFilter);
-    if (!list.length) { gridEl.innerHTML=''; emptyEl.style.display='block'; return; }
-    emptyEl.style.display = 'none';
-    gridEl.innerHTML = list.map(w => {
-      const isFav = favs.includes(w.id), isCur = activeId === w.id;
-      const bg = w.type === 'live'
-        ? `background:${w.css};background-size:200% 200%;animation:mwAurora 6s ease infinite;`
-        : `background:${w.css};`;
-      return `<div class="tile ${isCur?'current':''}" data-id="${esc(w.id)}" style="${bg}">
-        <div class="cat-badge">${esc(w.cat)}</div>
-        <button class="fav ${isFav?'on':''}" data-fav="${esc(w.id)}" title="В избранное">★</button>
-        <div class="label">${esc(w.name)}</div>
-      </div>`;
-    }).join('');
-  }
-
-  $('search').addEventListener('input', e => { query = e.target.value.trim(); renderGrid(); });
-
-  gridEl.addEventListener('click', e => {
-    const fb = e.target.closest('[data-fav]');
-    if (fb) {
-      e.stopPropagation();
-      const id = fb.dataset.fav;
-      if (favs.includes(id)) favs = favs.filter(x => x !== id); else favs.push(id);
-      saveFavs(favs); renderChips(); renderGrid(); return;
-    }
-    const tile = e.target.closest('[data-id]'); if (!tile) return;
-    const wall = WALLS.find(x => x.id === tile.dataset.id);
-    if (wall) openPreview(wall);
   });
 
-  const prevEl = $('prev'), prevView = $('prevView'), prevName = $('prevName'), prevMeta = $('prevMeta');
-  let previewWall = null;
-
-  function openPreview(wall) {
-    previewWall = wall;
-    const bg = wall.type === 'live'
-      ? `background:${wall.css};background-size:200% 200%;animation:mwAurora 8s ease infinite;`
-      : `background:${wall.css};`;
-    prevView.setAttribute('style', bg);
-    prevName.textContent = wall.name;
-    prevMeta.textContent = `${wall.cat} • ${wall.type==='live'?'живые':'статичные'}`;
-    $('prevFav').textContent = favs.includes(wall.id) ? '★ В избранном' : '⭐ В избранное';
-    prevEl.classList.add('on');
-    const box = prevEl.querySelector('.prev-box'); if (box) box.scrollTop = 0;
+  function inputNum(n) {
+    if (justEvaluated) { current = '0'; justEvaluated = false; previous = null; op = null; }
+    if (current === '0') current = n;
+    else if (current === '-0') current = '-' + n;
+    else if (current.length < 18) current += n;
+    update();
   }
-  function closePreview() { prevEl.classList.remove('on'); previewWall = null; }
+  function inputDot() {
+    if (justEvaluated) { current = '0'; justEvaluated = false; previous = null; op = null; }
+    if (!current.includes('.')) current += '.';
+    update();
+  }
+  function calc(a, b, o) {
+    switch (o) {
+      case '+': return a + b;
+      case '-': return a - b;
+      case '*': return a * b;
+      case '/': return b === 0 ? Infinity : a / b;
+    }
+    return b;
+  }
+  function applyOp(nextOp) {
+    const val = parseNumber(current);
+    if (previous != null && op != null && !justEvaluated) {
+      const r = calc(parseNumber(previous), val, op);
+      if (!isFinite(r)) {
+        current = 'Деление на ноль';
+        previous = null; op = null; justEvaluated = true;
+        update();
+        return;
+      }
+      const expr = `${fmt(parseNumber(previous))} ${opSym(op)} ${fmt(val)}`;
+      current = fmt(r).replace(/\s/g, '');
+      pushHistory(expr, fmt(r));
+      previous = current;
+    } else {
+      previous = current;
+    }
+    op = nextOp;
+    justEvaluated = false;
+    current = '0';
+    update();
+  }
+  function equals() {
+    if (previous == null || op == null) {
+      pushHistory(current, current);
+      justEvaluated = true;
+      return;
+    }
+    const a = parseNumber(previous), b = parseNumber(current);
+    const r = calc(a, b, op);
+    const expr = `${fmt(a)} ${opSym(op)} ${fmt(b)}`;
+    if (!isFinite(r)) {
+      current = 'Деление на ноль';
+      previous = null; op = null; justEvaluated = true;
+      update();
+      return;
+    }
+    current = fmt(r).replace(/\s/g, '');
+    pushHistory(expr, fmt(r));
+    previous = null; op = null; justEvaluated = true;
+    update();
+  }
+  function clearAll()   { current='0'; previous=null; op=null; justEvaluated=false; update(); }
+  function clearEntry() { current='0'; justEvaluated=false; update(); }
+  function back() {
+    if (justEvaluated) { current = '0'; justEvaluated = false; update(); return; }
+    current = current.length > 1 ? current.slice(0, -1) : '0';
+    if (current === '-') current = '0';
+    update();
+  }
+  function sign() {
+    if (current === '0') return;
+    current = current.startsWith('-') ? current.slice(1) : '-' + current;
+    update();
+  }
+  function memSave(next) {
+    mem = next;
+    Store.set(MEM_KEY, String(mem));
+    update();
+  }
 
-  $('prevClose').addEventListener('click', closePreview);
-  prevEl.addEventListener('click', e => { if (e.target === prevEl) closePreview(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && prevEl.classList.contains('on')) closePreview(); });
-
-  $('prevApply').addEventListener('click', () => {
-    if (!previewWall) return;
-    sendWall({
-      id: previewWall.id, type: previewWall.type || 'static',
-      css: previewWall.css, style: previewWall.style || null,
-      name: previewWall.name
+  document.querySelectorAll('.k').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const { num, op: o, act } = btn.dataset;
+      if (num != null) return inputNum(num);
+      if (o) return applyOp(o);
+      switch (act) {
+        case 'dot':   return inputDot();
+        case 'clear': return clearAll();
+        case 'ce':    return clearEntry();
+        case 'back':  return back();
+        case 'sign':  return sign();
+        case 'eq':    return equals();
+        case 'mc':    return memSave(0);
+        case 'mr':    current = fmt(mem).replace(/\s/g,''); justEvaluated = false; return update();
+        case 'm+':    return memSave(mem + parseNumber(current));
+        case 'm-':    return memSave(mem - parseNumber(current));
+      }
     });
-    activeId = previewWall.id;
-    toast(`✓ «${previewWall.name}» применено`);
-    renderGrid();
-    closePreview();
   });
 
-  $('prevFav').addEventListener('click', () => {
-    if (!previewWall) return;
-    const id = previewWall.id;
-    if (favs.includes(id)) favs = favs.filter(x => x !== id); else favs.push(id);
-    saveFavs(favs);
-    $('prevFav').textContent = favs.includes(id) ? '★ В избранном' : '⭐ В избранное';
-    renderChips(); renderGrid();
+  document.addEventListener('keydown', e => {
+    const k = e.key;
+    if (/^[0-9]$/.test(k)) { inputNum(k); e.preventDefault(); return; }
+    if (k === '.' || k === ',') { inputDot(); e.preventDefault(); return; }
+    if (k === '+' || k === '-' || k === '*' || k === '/') { applyOp(k); e.preventDefault(); return; }
+    if (k === 'Enter' || k === '=') { equals(); e.preventDefault(); return; }
+    if (k === 'Backspace') { back(); e.preventDefault(); return; }
+    if (k === 'Escape') { clearAll(); e.preventDefault(); return; }
+    if (k === 'Delete') { clearEntry(); e.preventDefault(); return; }
   });
 
-  $('prevReset').addEventListener('click', () => {
-    sendWall(null);
-    activeId = null;
-    toast('Обои сброшены — тема вернулась');
-    renderGrid();
-    closePreview();
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
+      document.querySelectorAll('.pane').forEach(p =>
+        p.classList.toggle('on', p.dataset.pane === t.dataset.tab));
+    });
   });
 
-  const toastEl = $('toast'); let toastTimer;
-  function toast(msg, ms = 1800) {
-    toastEl.textContent = msg; toastEl.classList.add('on');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove('on'), ms);
-  }
-
-  renderChips();
-  renderGrid();
-  console.log('%c[MelonWallpaper]', 'color:#ff4d6d', 'загружено обоев:', WALLS.length, '| живых:', LIVES.length);
+  update();
+  renderHist();
 })();
 </script>
 </body>
