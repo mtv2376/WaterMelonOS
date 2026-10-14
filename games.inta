@@ -1,7 +1,7 @@
 inta.stg:{namer,icon,background
-namer:app.name:["Restaurant Tycoon"],what.name=namer
+namer:app.name:["Restaurant Tycoon 2D"],what.name=namer
 icon:app.ico:["🍽️"],what.ico=icon
-background:app.bg:[#0a1710],what.ico.bg=background
+background:app.bg:[#12100e],what.ico.bg=background
 }
 IL.cfg={scripts:all}
 Inta.cfg={pc,tablet,phone}
@@ -12,1126 +12,1030 @@ load.stop_parse.inta
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Restaurant Tycoon</title>
+<title>Restaurant Tycoon 2D</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0a0a12;color:#fff;user-select:none;-webkit-user-select:none}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#12100e;color:#f5f0e8;user-select:none;-webkit-user-select:none}
 #c{display:block;position:fixed;inset:0;touch-action:none}
-#hud{position:fixed;top:0;left:0;right:0;padding:8px 10px;display:flex;gap:8px;align-items:center;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent);z-index:10;pointer-events:none}
-.pill{background:rgba(15,20,30,.85);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;display:flex;gap:6px;align-items:center;backdrop-filter:blur(6px)}
-.pill .ic{font-size:15px}
-.pill.gold{color:#ffd166;border-color:rgba(255,209,102,.3)}
-.pill.blue{color:#90e0ef;border-color:rgba(144,224,239,.3)}
-.pill.pink{color:#ff8fa3;border-color:rgba(255,143,163,.3)}
-#hud .spacer{flex:1}
-#bottombar{position:fixed;bottom:0;left:0;right:0;padding:10px;display:flex;gap:8px;justify-content:center;background:linear-gradient(0deg,rgba(0,0,0,.8),transparent);z-index:10;flex-wrap:wrap}
-.btn{background:rgba(15,20,30,.9);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:11px 18px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(8px);transition:.15s;display:flex;gap:6px;align-items:center}
-.btn:hover{background:rgba(35,45,65,.95);border-color:rgba(255,255,255,.25)}
+#hud{position:fixed;top:0;left:0;right:0;padding:8px 10px;display:flex;gap:6px;align-items:center;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent);z-index:10;pointer-events:none;flex-wrap:wrap}
+.pill{background:rgba(24,20,16,.9);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:5px 12px;font-size:12.5px;font-weight:700;display:flex;gap:5px;align-items:center;backdrop-filter:blur(6px);pointer-events:auto}
+.pill.gold{color:#ffd166}.pill.green{color:#95d5b2}.pill.blue{color:#90e0ef}.pill.pink{color:#ff8fa3}
+#storage{position:fixed;top:46px;left:8px;right:8px;display:flex;gap:6px;flex-wrap:wrap;z-index:10;pointer-events:none}
+.stchip{background:rgba(24,20,16,.92);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:4px 10px;font-size:12px;font-weight:700;display:flex;gap:5px;align-items:center;pointer-events:auto}
+#btns{position:fixed;bottom:0;left:0;right:0;padding:10px 8px;display:flex;gap:6px;justify-content:center;background:linear-gradient(0deg,rgba(0,0,0,.8),transparent);z-index:10;flex-wrap:wrap}
+.btn{background:rgba(24,20,16,.95);border:1px solid rgba(255,255,255,.14);border-radius:11px;padding:10px 14px;color:#f5f0e8;font-size:12.5px;font-weight:700;cursor:pointer;transition:.15s;display:flex;gap:5px;align-items:center;font-family:inherit}
+.btn:hover{background:rgba(60,50,40,.95);border-color:rgba(255,209,102,.4)}
 .btn:active{transform:scale(.95)}
-.btn.primary{background:linear-gradient(135deg,#ff4d6d,#c9184a);border-color:transparent}
-.btn.green{background:linear-gradient(135deg,#52b788,#2d6a4f);border-color:transparent}
-#panel{position:fixed;top:56px;bottom:64px;left:10px;right:10px;max-width:640px;margin:0 auto;background:rgba(15,20,30,.97);border:1px solid rgba(255,255,255,.15);border-radius:16px;display:none;flex-direction:column;z-index:20;overflow:hidden;backdrop-filter:blur(10px)}
+.btn.pri{background:linear-gradient(135deg,#e85a3a,#a03a20);border-color:transparent;color:#fff}
+.btn.grn{background:linear-gradient(135deg,#52b788,#2d6a4f);border-color:transparent;color:#fff}
+.btn.gld{background:linear-gradient(135deg,#f0b040,#a07020);border-color:transparent;color:#fff}
+#panel{position:fixed;top:50px;bottom:64px;left:8px;right:8px;max-width:640px;margin:0 auto;background:rgba(20,16,12,.98);border:1px solid rgba(255,255,255,.14);border-radius:16px;display:none;flex-direction:column;z-index:20;overflow:hidden}
 #panel.on{display:flex}
-.ph{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-.ph h2{font-size:17px}
-.ph .close{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.08);border:0;color:#fff;font-size:15px;cursor:pointer}
-.pb{flex:1;overflow-y:auto;padding:14px}
-.pb::-webkit-scrollbar{width:6px}
-.pb::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:3px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
-.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;gap:6px}
+.ph{padding:13px 18px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center}
+.ph h2{font-size:16px}
+.ph .x{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.08);border:0;color:#fff;font-size:15px;cursor:pointer}
+.pb{flex:1;overflow-y:auto;padding:12px}
+.pb::-webkit-scrollbar{width:6px}.pb::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:3px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:9px}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:11px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;gap:5px}
 .card:hover{background:rgba(255,255,255,.08);border-color:rgba(255,209,102,.4)}
-.card:active{transform:scale(.97)}
-.card.disabled{opacity:.4;cursor:not-allowed}
-.card .emoji{font-size:28px;line-height:1}
-.card .name{font-size:13px;font-weight:600}
+.card.dis{opacity:.4;cursor:not-allowed}
+.card .emoji{font-size:26px;line-height:1}
+.card .nm{font-size:12.5px;font-weight:700}
 .card .cost{font-size:11.5px;color:#ffd166;font-weight:700}
-.card .sub{font-size:10.5px;opacity:.5}
-#toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(20,20,30,.95);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:11px 18px;font-size:13px;font-weight:600;z-index:100;opacity:0;transition:.3s;pointer-events:none;max-width:90%;text-align:center}
+.card .sub{font-size:10.5px;opacity:.55}
+#toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(20,16,12,.96);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:10px 16px;font-size:12.5px;font-weight:700;z-index:100;opacity:0;transition:.3s;pointer-events:none;max-width:90%;text-align:center}
 #toast.on{opacity:1}
-#placehint{position:fixed;top:56px;left:50%;transform:translateX(-50%);background:rgba(255,77,109,.95);padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;z-index:15;display:none}
-#placehint.on{display:block}
-#loading{position:fixed;inset:0;background:#0a0a12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:1000;font-size:14px}
-.spinner{width:44px;height:44px;border:3px solid rgba(255,255,255,.15);border-top-color:#ff4d6d;border-radius:50%;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.dishRow{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:10px;margin-bottom:6px;font-size:13px}
-.dishRow.locked{opacity:.5}
-.dishRow .info{display:flex;flex-direction:column;gap:2px}
-.dishRow .p{color:#95d5b2;font-weight:700;font-size:12px}
-.dishRow .c{color:#ffd166;font-size:11.5px}
-.dishRow button{padding:7px 14px;border-radius:8px;border:0;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit}
-.dishRow .unlock{background:linear-gradient(135deg,#ff4d6d,#c9184a);color:#fff}
-.dishRow .unlocked{background:rgba(82,183,136,.25);color:#95d5b2;cursor:default}
-@media(max-width:520px){.grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.btn{padding:10px 13px;font-size:12px}.pill{padding:5px 10px;font-size:12px}}
+#hint{position:fixed;top:76px;left:50%;transform:translateX(-50%);background:rgba(232,90,58,.95);padding:7px 14px;border-radius:20px;font-size:11.5px;font-weight:700;z-index:15;display:none}
+#hint.on{display:block}
+#tip{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);font-size:11px;opacity:.4;z-index:5;text-align:center;pointer-events:none}
+@media(max-width:520px){.grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}.btn{padding:9px 11px;font-size:11.5px}.pill{padding:4px 9px;font-size:11.5px}}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-
 <div id="hud">
-  <div class="pill gold"><span class="ic">💰</span><span id="money">0</span></div>
-  <div class="pill blue"><span class="ic">👥</span><span id="cust">0</span></div>
-  <div class="pill pink"><span class="ic">⭐</span><span id="rep">100</span></div>
+  <div class="pill gold" id="pMoney">💰 0</div>
+  <div class="pill green" id="pRep">⭐ 100</div>
+  <div class="pill blue" id="pCust">👥 0</div>
+  <div class="pill pink" id="pDay">📅 День 1</div>
 </div>
-
-<div id="placehint">Выбери место на полу · тап по пустой клетке</div>
-
-<div id="bottombar">
-  <button class="btn primary" id="bShop">🛒 Магазин</button>
-  <button class="btn green" id="bMenu">📖 Меню</button>
-  <button class="btn" id="bSpeed">⏩ 1×</button>
+<div id="storage"></div>
+<div id="hint">Выбери клетку на полу · тап</div>
+<div id="btns">
+  <button class="btn pri" id="bShop">🛒 Магазин</button>
+  <button class="btn grn" id="bMenu">📖 Меню</button>
+  <button class="btn gld" id="bUpg">⬆️ Улучшения</button>
+  <button class="btn" id="bFloor">🏢 Этаж 1</button>
   <button class="btn" id="bHelp">❓</button>
 </div>
-
-<div id="panel">
-  <div class="ph"><h2 id="ptitle">Магазин</h2><button class="close" id="pclose">✕</button></div>
-  <div class="pb" id="pbody"></div>
-</div>
-
+<div id="panel"><div class="ph"><h2 id="ptit">Панель</h2><button class="x" id="px">✕</button></div><div class="pb" id="pb"></div></div>
 <div id="toast"></div>
+<div id="tip">Тапни по плите → выбери блюдо · Тапни по гостю → отдай заказ</div>
 
-<div id="loading"><div class="spinner"></div><div>Загрузка 3D‑движка…</div></div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-(()=>{"use strict";
-if(!window.THREE){document.getElementById('loading').innerHTML='<div style="color:#ffb3c1">Не удалось загрузить Three.js. Проверь интернет.</div>';return}
+(function(){
+"use strict";
+/* ============ UTIL ============ */
+var $=function(i){return document.getElementById(i)};
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function rnd(a,b){return a+Math.random()*(b-a)}
 
-/* ==========================================================
-   ХРАНИЛИЩЕ
-   ========================================================== */
-const MEM={};
-const Store={
-  get(k){try{return localStorage.getItem(k)}catch{return MEM[k]||null}},
-  set(k,v){try{localStorage.setItem(k,v)}catch{MEM[k]=String(v)}},
-  del(k){try{localStorage.removeItem(k)}catch{delete MEM[k]}}
+/* ============ STORAGE ============ */
+var MEM={};
+var St={
+  get:function(k){try{return localStorage.getItem(k)}catch(e){return MEM[k]||null}},
+  set:function(k,v){try{localStorage.setItem(k,v)}catch(e){MEM[k]=String(v)}}
 };
-const SAVE_KEY='wmos:rt:save';
+var SAVE_KEY='wmos:rt2d:v2';
 
-/* ==========================================================
-   КОНСТАНТЫ МИРА
-   ========================================================== */
-const GW=16,GH=12,TILE=1.1;         // сетка
-const TW=GW*TILE,TH=GH*TILE;        // размеры пола
-
-/* ==========================================================
-   МОДЕЛИ БЛЮД — 1 строка на блюдо
-   id, назв, цена продажи, цена ингр., сек. готовки, цвет, форма
-   ========================================================== */
-const DISHES=[
-['burger','Бургер',340,120,4,0xc98b55,'stack'],
-['pizza','Пицца',520,180,6,0xd9a441,'flat'],
-['salad','Салат',260,80,3,0x4a8b3f,'bowl'],
-['soup','Суп',220,70,5,0xc44a1a,'bowl'],
-['steak','Стейк',680,240,7,0x8b3a1f,'steak'],
-['sushi','Суши',560,200,6,0xf4a261,'roll'],
-['pasta','Паста',420,140,5,0xd9a441,'noodle'],
-['fish','Рыба',580,220,6,0x88bbcc,'fish'],
-['sandwich','Сэндвич',240,70,3,0xc98b55,'stack'],
-['icecream','Мороженое',200,50,2,0xffeedd,'cone'],
-['cake','Торт',360,110,4,0xffaabb,'cake'],
-['coffee','Кофе',140,30,2,0x4a2a1a,'cup'],
-['tea','Чай',120,25,2,0xbb8844,'cup'],
-['juice','Сок',160,40,2,0xffaa33,'cup'],
-['water','Вода',90,15,1,0x88bbdd,'cup'],
-['fries','Картофель фри',220,60,3,0xf0c040,'fries'],
-['hotdog','Хот-дог',260,80,3,0xc98b55,'stack'],
-['taco','Тако',300,90,3,0xd9a441,'taco'],
-['wings','Крылышки',380,120,5,0xa8422a,'wings'],
-['ramen','Рамен',460,160,6,0xd9a441,'bowl'],
+/* ============ DISHES ============ */
+var DISHES=[
+{id:'coffee',name:'Кофе',emoji:'☕',price:80,time:1.5,cost:20,u:1},
+{id:'water',name:'Вода',emoji:'💧',price:60,time:1,cost:10,u:1},
+{id:'tea',name:'Чай',emoji:'🍵',price:70,time:1.2,cost:15,u:1},
+{id:'burger',name:'Бургер',emoji:'🍔',price:250,time:3,cost:70,u:1},
+{id:'salad',name:'Салат',emoji:'🥗',price:180,time:2,cost:50,u:1},
+{id:'pizza',name:'Пицца',emoji:'🍕',price:400,time:4,cost:120},
+{id:'pasta',name:'Паста',emoji:'🍝',price:320,time:3.5,cost:90},
+{id:'soup',name:'Суп',emoji:'🍲',price:220,time:3,cost:60},
+{id:'steak',name:'Стейк',emoji:'🥩',price:550,time:5,cost:180},
+{id:'fish',name:'Рыба',emoji:'🐟',price:480,time:4.5,cost:150},
+{id:'sushi',name:'Суши',emoji:'🍣',price:600,time:4,cost:200},
+{id:'taco',name:'Тако',emoji:'🌮',price:280,time:2.5,cost:80},
+{id:'sandwich',name:'Сэндвич',emoji:'🥪',price:200,time:2,cost:55},
+{id:'ice',name:'Мороженое',emoji:'🍦',price:150,time:1.5,cost:40},
+{id:'cake',name:'Торт',emoji:'🍰',price:260,time:2,cost:70},
+{id:'fries',name:'Картофель',emoji:'🍟',price:140,time:1.5,cost:35},
+{id:'hotdog',name:'Хот-дог',emoji:'🌭',price:180,time:2,cost:50},
+{id:'wings',name:'Крылья',emoji:'🍗',price:340,time:3,cost:100},
+{id:'ramen',name:'Рамен',emoji:'🍜',price:420,time:4,cost:130},
+{id:'donut',name:'Пончик',emoji:'🍩',price:120,time:1,cost:30},
+{id:'boba',name:'Бабл-ти',emoji:'🧋',price:220,time:2,cost:60},
+{id:'juice',name:'Сок',emoji:'🧃',price:130,time:1,cost:35},
+{id:'pancake',name:'Панкейки',emoji:'🥞',price:240,time:3,cost:65},
+{id:'croissant',name:'Круассан',emoji:'🥐',price:160,time:1.5,cost:40},
+{id:'pie',name:'Пирог',emoji:'🥧',price:300,time:3,cost:85}
 ];
-const DISH={};DISHES.forEach(d=>DISH[d[0]]={id:d[0],name:d[1],price:d[2],cost:d[3],time:d[4],color:d[5],shape:d[6]});
+var DM={};DISHES.forEach(function(d){DM[d.id]=d});
 
-/* ==========================================================
-   МАГАЗИН — предметы для расстановки
-   ========================================================== */
-const ITEMS={
-  table2:{name:'Стол на 2',emoji:'🪑',cost:800,seats:2,build:buildTable2},
-  table4:{name:'Стол на 4',emoji:'🪑',cost:1500,seats:4,build:buildTable4},
-  chair:{name:'Стул',emoji:'💺',cost:250,build:buildChair},
-  stove:{name:'Плита',emoji:'🔥',cost:3000,build:buildStove,cook:1},
-  counter:{name:'Стол-раздача',emoji:'🧑‍🍳',cost:1200,build:buildCounter,serve:1},
-  register:{name:'Касса',emoji:'💵',cost:2000,build:buildRegister},
-  plant:{name:'Растение',emoji:'🌿',cost:350,build:buildPlant},
-  painting:{name:'Картина',emoji:'🖼️',cost:900,build:buildPainting},
-  lamp:{name:'Лампа',emoji:'💡',cost:600,build:buildLamp},
-  rug:{name:'Ковёр',emoji:'🟥',cost:700,build:buildRug,flat:1},
+/* ============ ITEMS ============ */
+var ITEMS={
+  table2:{name:'Стол на 2',emoji:'🪑',cost:800,seats:2,color:'#8b5a3a'},
+  table4:{name:'Стол на 4',emoji:'🍽️',cost:1600,seats:4,color:'#8b5a3a'},
+  stove:{name:'Плита',emoji:'🔥',cost:3000,cooks:3,block:true,color:'#555a63'},
+  counter:{name:'Раздача',emoji:'🧑‍🍳',cost:1200,block:true,color:'#9aa0a8'},
+  register:{name:'Касса',emoji:'💰',cost:2000,block:true,color:'#9aa0a8'},
+  plant:{name:'Растение',emoji:'🌿',cost:400,block:true,color:'#2d6a4f'},
+  painting:{name:'Картина',emoji:'🖼️',cost:900,block:true,color:'#3a86ff'},
+  sofa:{name:'Диван',emoji:'🛋️',cost:1500,block:true,color:'#a03a5a'},
+  rug:{name:'Ковёр',emoji:'🟥',cost:700,block:false,color:'#8b1538'}
 };
 
-/* ==========================================================
-   СЦЕНА
-   ========================================================== */
-const canvas=document.getElementById('c');
-const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-renderer.setSize(innerWidth,innerHeight,false);
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-renderer.outputEncoding=THREE.sRGBEncoding;
+/* ============ UPGRADES ============ */
+var UPGRADES=[
+{id:'card',name:'Оплата картой',desc:'+50% к выручке',cost:6000,max:1,icon:'💳'},
+{id:'delivery',name:'Доставка',desc:'Пассивный доход',cost:10000,max:5,icon:'🚗'},
+{id:'fast',name:'Быстрая готовка',desc:'−25% время',cost:8000,max:3,icon:'⚡'},
+{id:'expand_w',name:'Расширить вправо',desc:'+4 клетки',cost:15000,max:3,icon:'➡️'},
+{id:'expand_h',name:'Расширить вниз',desc:'+4 клетки',cost:15000,max:3,icon:'⬇️'},
+{id:'floor2',name:'Второй этаж',desc:'Новый зал',cost:40000,max:1,icon:'🏢'},
+{id:'waiter',name:'Официант',desc:'Авто-раздача',cost:25000,max:4,icon:'🤵'},
+{id:'marketing',name:'Реклама',desc:'+30% клиентов',cost:12000,max:5,icon:'📢'},
+{id:'cleaner',name:'Уборщик',desc:'Довольнее гости',cost:20000,max:3,icon:'🧹'}
+];
 
-const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x0d1420);
-scene.fog=new THREE.Fog(0x0d1420,26,45);
-
-const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,200);
-const cam={theta:Math.PI/4,phi:0.9,dist:18,target:new THREE.Vector3(0,0.5,0)};
-updateCamera();
-
-/* Свет */
-scene.add(new THREE.AmbientLight(0xffffff,.55));
-const sun=new THREE.DirectionalLight(0xffe4b5,1.15);
-sun.position.set(8,18,6);sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);
-sun.shadow.camera.left=-14;sun.shadow.camera.right=14;
-sun.shadow.camera.top=14;sun.shadow.camera.bottom=-14;
-sun.shadow.camera.near=1;sun.shadow.camera.far=40;
-sun.shadow.bias=-0.0004;
-scene.add(sun);
-
-/* Тёплый свет от люстр */
-const warm1=new THREE.PointLight(0xffaa55,.85,16,2);warm1.position.set(-3,4,0);scene.add(warm1);
-const warm2=new THREE.PointLight(0xffaa55,.85,16,2);warm2.position.set(3,4,0);scene.add(warm2);
-
-/* ==========================================================
-   ПОЛ И СТЕНЫ
-   ========================================================== */
-buildRoom();
-
-function buildRoom(){
-  const floorGeo=new THREE.BoxGeometry(TW,.1,TH);
-  const floorMat=new THREE.MeshStandardMaterial({color:0x3a2418,roughness:.85});
-  const floor=new THREE.Mesh(floorGeo,floorMat);
-  floor.position.y=-.05;floor.receiveShadow=true;scene.add(floor);
-
-  // шахматные плитки для стиля
-  for(let gx=0;gx<GW;gx++)for(let gy=0;gy<GH;gy++){
-    if((gx+gy)%2===0)continue;
-    const t=new THREE.Mesh(new THREE.BoxGeometry(TILE-.05,.02,TILE-.05),
-      new THREE.MeshStandardMaterial({color:0x4a2e1f,roughness:.8}));
-    t.position.set(gxToX(gx),.005,gyToZ(gy));
-    t.receiveShadow=true;scene.add(t);
-  }
-
-  // стены
-  const wallMat=new THREE.MeshStandardMaterial({color:0x1c1c2a,roughness:.9});
-  const wallH=3.2,t=.2;
-  const w1=new THREE.Mesh(new THREE.BoxGeometry(TW+t*2,wallH,t),wallMat);
-  w1.position.set(0,wallH/2,-TH/2-t/2);w1.receiveShadow=true;w1.castShadow=true;scene.add(w1);
-  const w2=w1.clone();w2.position.z=TH/2+t/2;scene.add(w2);
-  const w3=new THREE.Mesh(new THREE.BoxGeometry(t,wallH,TH+t*2),wallMat);
-  w3.position.set(-TW/2-t/2,wallH/2,0);w3.receiveShadow=true;w3.castShadow=true;scene.add(w3);
-  const w4=w3.clone();w4.position.x=TW/2+t/2;scene.add(w4);
-
-  // молдинг
-  const trimMat=new THREE.MeshStandardMaterial({color:0x6b3a2a,roughness:.7});
-  const trims=[
-    [TW+t*2,.15,t,0,.02,-TH/2-t/2],
-    [TW+t*2,.15,t,0,.02, TH/2+t/2],
-    [t,.15,TH+t*2,-TW/2-t/2,.02,0],
-    [t,.15,TH+t*2, TW/2+t/2,.02,0],
-  ];
-  trims.forEach(([a,b,c,px,py,pz])=>{
-    const m=new THREE.Mesh(new THREE.BoxGeometry(a,b,c),trimMat);
-    m.position.set(px,py,pz);scene.add(m);
-  });
-}
-
-function gxToX(gx){return (gx-(GW-1)/2)*TILE}
-function gyToZ(gy){return (gy-(GH-1)/2)*TILE}
-function xToGx(x){return Math.round(x/TILE+(GW-1)/2)}
-function zToGy(z){return Math.round(z/TILE+(GH-1)/2)}
-
-/* ==========================================================
-   БИЛДЕРЫ МЕБЕЛИ
-   ========================================================== */
-function mat(c,r=.7,m=0){return new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m})}
-
-function buildTable2(){
-  const g=new THREE.Group();
-  const top=new THREE.Mesh(new THREE.BoxGeometry(.85,.08,.85),mat(0x8b5a3a,.6));
-  top.position.y=.75;top.castShadow=true;top.receiveShadow=true;g.add(top);
-  const leg=new THREE.Mesh(new THREE.BoxGeometry(.12,.75,.12),mat(0x4a2a1a,.6));
-  leg.position.y=.375;leg.castShadow=true;g.add(leg);
-  // стулья
-  const c1=buildChair();c1.position.set(0,0,.6);g.add(c1);
-  const c2=buildChair();c2.position.set(0,0,-.6);g.add(c2);
-  return g;
-}
-function buildTable4(){
-  const g=new THREE.Group();
-  const top=new THREE.Mesh(new THREE.BoxGeometry(1.2,.08,1.2),mat(0x8b5a3a,.6));
-  top.position.y=.75;top.castShadow=true;top.receiveShadow=true;g.add(top);
-  const leg=new THREE.Mesh(new THREE.BoxGeometry(.16,.75,.16),mat(0x4a2a1a,.6));
-  leg.position.y=.375;leg.castShadow=true;g.add(leg);
-  const c1=buildChair();c1.position.set(0,0,.85);g.add(c1);
-  const c2=buildChair();c2.position.set(0,0,-.85);c2.rotation.y=Math.PI;g.add(c2);
-  const c3=buildChair();c3.position.set(.85,0,0);c3.rotation.y=-Math.PI/2;g.add(c3);
-  const c4=buildChair();c4.position.set(-.85,0,0);c4.rotation.y=Math.PI/2;g.add(c4);
-  return g;
-}
-function buildChair(){
-  const g=new THREE.Group();
-  const seat=new THREE.Mesh(new THREE.BoxGeometry(.42,.06,.42),mat(0x6b3a2a,.7));
-  seat.position.y=.45;seat.castShadow=true;g.add(seat);
-  const back=new THREE.Mesh(new THREE.BoxGeometry(.42,.42,.06),mat(0x6b3a2a,.7));
-  back.position.set(0,.66,-.18);back.castShadow=true;g.add(back);
-  const leg=new THREE.Mesh(new THREE.BoxGeometry(.08,.42,.08),mat(0x3a1f12,.7));
-  leg.position.y=.21;g.add(leg);
-  return g;
-}
-function buildStove(){
-  const g=new THREE.Group();
-  const base=new THREE.Mesh(new THREE.BoxGeometry(1,.85,.9),mat(0x4a4a55,.5,.6));
-  base.position.y=.425;base.castShadow=true;base.receiveShadow=true;g.add(base);
-  const top=new THREE.Mesh(new THREE.BoxGeometry(1,.05,.9),mat(0x2a2a35,.4,.7));
-  top.position.y=.875;g.add(top);
-  // 4 круга
-  for(let i=0;i<4;i++){
-    const c=new THREE.Mesh(new THREE.CylinderGeometry(.11,.11,.02,16),mat(0x111,.6,.8));
-    c.position.set(i%2?-.22:.22,.9,i<2?-.22:.22);g.add(c);
-  }
-  // светящаяся панель
-  const panel=new THREE.Mesh(new THREE.PlaneGeometry(.25,.1),new THREE.MeshBasicMaterial({color:0xff3300}));
-  panel.position.set(0,.55,.451);g.add(panel);
-  return g;
-}
-function buildCounter(){
-  const g=new THREE.Group();
-  const b=new THREE.Mesh(new THREE.BoxGeometry(1.6,.9,.7),mat(0x9aa0a8,.5,.3));
-  b.position.y=.45;b.castShadow=true;b.receiveShadow=true;g.add(b);
-  const top=new THREE.Mesh(new THREE.BoxGeometry(1.7,.06,.8),mat(0xdddddd,.3,.5));
-  top.position.y=.93;top.castShadow=true;g.add(top);
-  return g;
-}
-function buildRegister(){
-  const g=new THREE.Group();
-  const b=new THREE.Mesh(new THREE.BoxGeometry(.7,.9,.7),mat(0x9aa0a8,.5,.3));
-  b.position.y=.45;b.castShadow=true;b.receiveShadow=true;g.add(b);
-  const screen=new THREE.Mesh(new THREE.BoxGeometry(.5,.35,.04),mat(0x0a0a14,.3,.5));
-  screen.position.set(0,1.07,.35);g.add(screen);
-  const glow=new THREE.Mesh(new THREE.PlaneGeometry(.44,.29),new THREE.MeshBasicMaterial({color:0x52b788}));
-  glow.position.set(0,1.07,.37);g.add(glow);
-  return g;
-}
-function buildPlant(){
-  const g=new THREE.Group();
-  const pot=new THREE.Mesh(new THREE.CylinderGeometry(.18,.14,.32,16),mat(0x8b3a1f,.7));
-  pot.position.y=.16;pot.castShadow=true;g.add(pot);
-  const soil=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.04,16),mat(0x2a1a0a,.9));
-  soil.position.y=.32;g.add(soil);
-  for(let i=0;i<7;i++){
-    const l=new THREE.Mesh(new THREE.SphereGeometry(.14,8,6),mat(0x2d6a4f,.7));
-    l.position.set((Math.random()-.5)*.3,.42+Math.random()*.3,(Math.random()-.5)*.3);
-    l.scale.set(1,.6,1);g.add(l);
-  }
-  return g;
-}
-function buildPainting(){
-  const g=new THREE.Group();
-  const f=new THREE.Mesh(new THREE.BoxGeometry(.9,.7,.06),mat(0x6b3a2a,.5));
-  f.position.y=1.7;g.add(f);
-  const c=new THREE.Mesh(new THREE.PlaneGeometry(.78,.58),
-    new THREE.MeshStandardMaterial({color:0x3a86ff,roughness:.9,side:THREE.DoubleSide}));
-  c.position.set(0,1.7,.035);g.add(c);
-  return g;
-}
-function buildLamp(){
-  const g=new THREE.Group();
-  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,1.6,8),mat(0x222,.5,.6));
-  pole.position.y=.8;g.add(pole);
-  const base=new THREE.Mesh(new THREE.CylinderGeometry(.15,.2,.06,12),mat(0x222,.5,.6));
-  g.add(base);
-  const shade=new THREE.Mesh(new THREE.CylinderGeometry(.22,.3,.3,16,1,true),
-    new THREE.MeshStandardMaterial({color:0xffd166,emissive:0xffaa33,emissiveIntensity:.8,side:THREE.DoubleSide}));
-  shade.position.y=1.6;g.add(shade);
-  const pl=new THREE.PointLight(0xffbb55,.6,5,2);pl.position.y=1.5;g.add(pl);
-  return g;
-}
-function buildRug(){
-  const g=new THREE.Group();
-  const r=new THREE.Mesh(new THREE.BoxGeometry(2.4,.02,1.6),mat(0x8b1538,.9));
-  r.position.y=.01;r.receiveShadow=true;g.add(r);
-  const inner=new THREE.Mesh(new THREE.BoxGeometry(2.1,.025,1.3),mat(0xa01843,.9));
-  inner.position.y=.012;g.add(inner);
-  return g;
-}
-
-/* ==========================================================
-   МОДЕЛИ БЛЮД
-   ========================================================== */
-function buildDishMesh(dish){
-  const g=new THREE.Group();
-  const plate=new THREE.Mesh(new THREE.CylinderGeometry(.34,.32,.045,20),mat(0xf0f0f0,.3));
-  plate.castShadow=true;g.add(plate);
-  const m=mat(dish.color,.55);
-  const shape=dish.shape;
-  if(shape==='stack'){
-    for(let i=0;i<3;i++){
-      const s=new THREE.Mesh(new THREE.BoxGeometry(.42,.06,.42),m);
-      s.position.y=.08+i*.07;s.position.x=(Math.random()-.5)*.06;
-      s.position.z=(Math.random()-.5)*.06;s.castShadow=true;g.add(s);
-    }
-  } else if(shape==='flat'){
-    const f=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.08,20),m);
-    f.position.y=.1;f.castShadow=true;g.add(f);
-  } else if(shape==='bowl'){
-    const b=new THREE.Mesh(new THREE.SphereGeometry(.24,16,12,0,Math.PI*2,0,Math.PI/2),m);
-    b.position.y=.15;b.rotation.x=Math.PI;b.castShadow=true;g.add(b);
-  } else if(shape==='cup'){
-    const c=new THREE.Mesh(new THREE.CylinderGeometry(.13,.11,.26,16),m);
-    c.position.y=.17;c.castShadow=true;g.add(c);
-    const h=new THREE.Mesh(new THREE.TorusGeometry(.08,.02,6,12),m);
-    h.position.set(.13,.17,0);h.rotation.y=Math.PI/2;g.add(h);
-  } else if(shape==='steak'){
-    const s=new THREE.Mesh(new THREE.BoxGeometry(.42,.1,.3),m);
-    s.position.y=.1;s.castShadow=true;g.add(s);
-  } else if(shape==='roll'){
-    for(let i=0;i<3;i++){
-      const r=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.18,12),m);
-      r.position.set(-.15+i*.15,.15,0);r.rotation.z=Math.PI/2;r.castShadow=true;g.add(r);
-    }
-  } else if(shape==='noodle'){
-    for(let i=0;i<6;i++){
-      const n=new THREE.Mesh(new THREE.TorusGeometry(.13,.025,6,14),m);
-      n.position.y=.11+i*.018;n.rotation.x=Math.PI/2;n.castShadow=true;g.add(n);
-    }
-  } else if(shape==='fish'){
-    const f=new THREE.Mesh(new THREE.BoxGeometry(.5,.09,.22),m);
-    f.position.y=.1;f.castShadow=true;g.add(f);
-    const t=new THREE.Mesh(new THREE.ConeGeometry(.11,.15,4),m);
-    t.position.set(-.3,.1,0);t.rotation.z=Math.PI/2;g.add(t);
-  } else if(shape==='cone'){
-    const c=new THREE.Mesh(new THREE.ConeGeometry(.14,.4,10),mat(0xd4a04a,.7));
-    c.position.y=.22;c.rotation.x=Math.PI;c.castShadow=true;g.add(c);
-    const s=new THREE.Mesh(new THREE.SphereGeometry(.14,12,10),m);
-    s.position.y=.42;g.add(s);
-  } else if(shape==='cake'){
-    const b=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.24,20),m);
-    b.position.y=.17;b.castShadow=true;g.add(b);
-    const top=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.04,20),mat(0xff5577,.6));
-    top.position.y=.31;g.add(top);
-  } else if(shape==='fries'){
-    for(let i=0;i<10;i++){
-      const f=new THREE.Mesh(new THREE.BoxGeometry(.05,.28,.05),m);
-      f.position.set((Math.random()-.5)*.3,.15+Math.random()*.06,(Math.random()-.5)*.3);
-      f.rotation.z=(Math.random()-.5)*.4;f.castShadow=true;g.add(f);
-    }
-  } else if(shape==='taco'){
-    const s=new THREE.Mesh(new THREE.SphereGeometry(.24,16,12,0,Math.PI,0,Math.PI/2),mat(0xd4a04a,.7));
-    s.position.y=.1;s.rotation.y=Math.PI/2;s.castShadow=true;g.add(s);
-    const f=new THREE.Mesh(new THREE.BoxGeometry(.3,.08,.15),m);
-    f.position.y=.15;g.add(f);
-  } else if(shape==='wings'){
-    for(let i=0;i<4;i++){
-      const w=new THREE.Mesh(new THREE.CapsuleGeometry?new THREE.CapsuleGeometry(.06,.15,4,8):new THREE.CylinderGeometry(.06,.06,.2,8),m);
-      w.position.set((Math.random()-.5)*.3,.14,(Math.random()-.5)*.3);
-      w.rotation.set(Math.random()*2,Math.random()*2,Math.random()*2);
-      w.castShadow=true;g.add(w);
-    }
-  } else {
-    const b=new THREE.Mesh(new THREE.BoxGeometry(.3,.14,.3),m);
-    b.position.y=.11;b.castShadow=true;g.add(b);
-  }
-  return g;
-}
-
-/* ==========================================================
-   СОСТОЯНИЕ ИГРЫ
-   ========================================================== */
-const state={
-  money:5000,
-  reputation:100,
-  unlocked:['burger','salad','coffee','water','fries'],
-  placed:[],       // {type, gx, gy, mesh, id, extra}
-  occupied:{},     // "gx,gy" → placedItem
+/* ============ STATE ============ */
+var state={
+  money:8000,rep:100,
+  gridW:16,gridH:12,
+  floor:0,
+  grids:[null,null],
+  items:[],
   customers:[],
-  ready:0,         // глобальный счётчик готовых блюд на раздачах (для прогресса)
-  nextId:1,
-  placingType:null,
-  placingGhost:null,
-  spawnTimer:0,
-  speed:1,
+  storage:{},
+  upgrades:{},
+  placing:null,
   stats:{served:0,earned:0},
+  spawnTimer:3,
+  deliveryTimer:0,
+  gameTime:0,
+  unlockedDishes:['coffee','water','tea','burger','salad'],
+  cam:{x:8,y:6,z:1},
+  time:0
 };
 
-/* ==========================================================
-   ЗАГРУЗКА/СОХРАНЕНИЕ
-   ========================================================== */
+/* ============ INIT ============ */
+function initGrid(){
+  var g=[];
+  for(var y=0;y<state.gridH;y++){g.push(new Array(state.gridW).fill(null))}
+  return g;
+}
+function ensureFloors(){
+  if(!state.grids[0])state.grids[0]=initGrid();
+  if(!state.grids[1])state.grids[1]=initGrid();
+}
+function grid(){return state.grids[state.floor]}
+
+/* ============ CANVAS ============ */
+var cv=$('c'),ctx=cv.getContext('2d');
+var W=0,H=0,DPR=1;
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=window.innerWidth;H=window.innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;
+  cv.style.width=W+'px';cv.style.height=H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize',resize);resize();
+
+/* ============ SAVE ============ */
 function save(){
   try{
-    Store.set(SAVE_KEY,JSON.stringify({
-      money:state.money,rep:state.reputation,
-      unlocked:state.unlocked,
-      placed:state.placed.map(p=>({t:p.type,gx:p.gx,gy:p.gy,extra:p.extra||null})),
-      stats:state.stats,nextId:state.nextId,
+    var placed=state.items.map(function(it){return {t:it.type,x:it.x,y:it.y,f:it.floor}});
+    St.set(SAVE_KEY,JSON.stringify({
+      money:state.money,rep:state.rep,
+      gridW:state.gridW,gridH:state.gridH,
+      unlocked:state.unlockedDishes,
+      upgrades:state.upgrades,
+      placed:placed,
+      stats:state.stats,
+      storage:state.storage,
+      floor:state.floor
     }));
-  }catch{}
+  }catch(e){}
 }
 function load(){
   try{
-    const raw=Store.get(SAVE_KEY);
-    if(!raw)return;
-    const d=JSON.parse(raw);
-    if(!d)return;
-    state.money=d.money??state.money;
-    state.reputation=d.rep??100;
-    state.unlocked=d.unlocked||state.unlocked;
-    state.stats=d.stats||state.stats;
-    state.nextId=d.nextId||1;
-    (d.placed||[]).forEach(p=>placeItem(p.t,p.gx,p.gy,true,p.extra));
-  }catch{}
+    var raw=St.get(SAVE_KEY);if(!raw)return false;
+    var d=JSON.parse(raw);if(!d)return false;
+    state.money=d.money||8000;
+    state.rep=d.rep||100;
+    state.gridW=d.gridW||16;
+    state.gridH=d.gridH||12;
+    state.unlockedDishes=d.unlocked||state.unlockedDishes;
+    state.upgrades=d.upgrades||{};
+    state.stats=d.stats||{served:0,earned:0};
+    state.storage=d.storage||{};
+    state.floor=d.floor||0;
+    state.grids=[null,null];
+    ensureFloors();
+    (d.placed||[]).forEach(function(p){
+      placeItem(p.t,p.x,p.y,p.f,true);
+    });
+    return true;
+  }catch(e){return false}
 }
 
-/* ==========================================================
-   РАССТАНОВКА
-   ========================================================== */
-function placeItem(type,gx,gy,silent,extra){
-  const def=ITEMS[type];if(!def)return null;
-  const key=gx+','+gy;
-  if(state.occupied[key])return null;
-  const mesh=def.build();mesh.position.set(gxToX(gx),0,gyToZ(gy));
-  scene.add(mesh);
-  const item={id:state.nextId++,type,gx,gy,mesh,extra:extra||null};
-  if(def.cook)item.cook=[];   // очередь блюд
-  if(def.serve)item.ready=[]; // готовые блюда
-  state.placed.push(item);
-  state.occupied[key]=item;
-  if(!silent){snd(700,.05,'square',.05);}
+/* ============ PLACE ITEM ============ */
+function placeItem(type,x,y,f,silent){
+  var def=ITEMS[type];if(!def)return null;
+  var g=state.grids[f];
+  if(!g)return null;
+  if(x<0||x>=state.gridW||y<0||y>=state.gridH)return null;
+  if(g[y][x])return null;
+  var item={type:type,x:x,y:y,floor:f,seats:[],jobs:[],ready:[],seatCount:0};
+  if(def.seats){
+    // Соседние клетки для посадки
+    var dirs=[[0,-1],[1,0],[0,1],[-1,0]];
+    for(var i=0;i<def.seats;i++){
+      var dx=dirs[i][0],dy=dirs[i][1];
+      var nx=x+dx,ny=y+dy;
+      if(nx>=0&&nx<state.gridW&&ny>=0&&ny<state.gridH){
+        item.seats.push({x:nx,y:ny,dir:dirs[i]});
+      }
+    }
+  }
+  g[y][x]=item;
+  state.items.push(item);
+  if(!silent)snd(700,.05,'square',.05);
   return item;
 }
-function removeItem(item){
-  if(!item)return;
-  scene.remove(item.mesh);
-  if(item.mesh.traverse)item.mesh.traverse(o=>{if(o.geometry)o.geometry.dispose?.();});
-  state.placed=state.placed.filter(p=>p!==item);
-  delete state.occupied[item.gx+','+item.gy];
-}
-function findCell(x,z){
-  const gx=xToGx(x),gy=zToGy(z);
-  if(gx<0||gx>=GW||gy<0||gy>=GH)return null;
-  // запрет на стены-клетки-1 у границы, чтобы не спавнить в стену
-  if(gx===0||gx===GW-1||gy===0||gy===GH-1)return null;
-  return {gx,gy};
+function removeItem(it){
+  var g=state.grids[it.floor];
+  if(g&&g[it.y][it.x]===it)g[it.y][it.x]=null;
+  state.items=state.items.filter(function(x){return x!==it});
 }
 
-/* призрак при размещении */
-function makeGhost(type){
-  clearGhost();
-  const def=ITEMS[type];if(!def)return;
-  const mesh=def.build();
-  mesh.traverse(o=>{
-    if(o.material){
-      o.material=o.material.clone();
-      o.material.transparent=true;
-      o.material.opacity=.5;
-    }
-  });
-  mesh.position.y=.02;
-  state.placingGhost=mesh;
-  scene.add(mesh);
-}
-function clearGhost(){
-  if(state.placingGhost){scene.remove(state.placingGhost);state.placingGhost=null}
-}
-function moveGhost(x,z){
-  if(!state.placingGhost)return;
-  const c=findCell(x,z);
-  if(!c){state.placingGhost.visible=false;return}
-  state.placingGhost.visible=true;
-  state.placingGhost.position.set(gxToX(c.gx),.02,gyToZ(c.gy));
-}
-
-/* ==========================================================
-   ЗВУКИ
-   ========================================================== */
-let AC=null;
+/* ============ ZVUK ============ */
+var AC=null;
 function snd(f,d,t,v){
   try{
     if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();
     if(AC.state==='suspended')AC.resume();
-    const o=AC.createOscillator(),g=AC.createGain();
+    var o=AC.createOscillator(),g=AC.createGain();
     o.type=t||'sine';o.frequency.value=f;
-    g.gain.value=v||.03;g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);
+    g.gain.value=v||.03;
+    g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);
     o.connect(g);g.connect(AC.destination);
     o.start();o.stop(AC.currentTime+d+.01);
-  }catch{}
+  }catch(e){}
 }
 
-/* ==========================================================
-   КАМЕРА — управление
-   ========================================================== */
-function updateCamera(){
-  const y=cam.target.y+Math.sin(cam.phi)*cam.dist;
-  const r=Math.cos(cam.phi)*cam.dist;
-  camera.position.set(cam.target.x+Math.cos(cam.theta)*r,y,cam.target.z+Math.sin(cam.theta)*r);
-  camera.lookAt(cam.target);
-}
-
-/* ==========================================================
-   ВВОД
-   ========================================================== */
-const ray=new THREE.Raycaster();
-const ndc=new THREE.Vector2();
-let isDragging=false,dragStartX=0,dragStartY=0,lastX=0,lastY=0;
-let activePtr=null,secondPtr=null,pinchStart=0,distStart=0;
-const touchMap={};
-
-canvas.addEventListener('pointerdown',e=>{
-  if(e.pointerType==='touch'){
-    touchMap[e.pointerId]={x:e.clientX,y:e.clientY};
-    const ids=Object.keys(touchMap);
-    if(ids.length===1){isDragging=true;activePtr=e.pointerId;lastX=e.clientX;lastY=e.clientY;distStart=0}
-    else if(ids.length===2){
-      const a=touchMap[ids[0]],b=touchMap[ids[1]];
-      distStart=Math.hypot(a.x-b.x,a.y-b.y);
-      pinchStart=cam.dist;
-      isDragging=false;
-    }
-    canvas.setPointerCapture(e.pointerId);
-  } else {
-    if(e.button===2||e.button===1||e.button===0&&e.shiftKey){isDragging=true;lastX=e.clientX;lastY=e.clientY}
-    else {isDragging=false;lastX=e.clientX;lastY=e.clientY}
-    canvas.setPointerCapture(e.pointerId);
-  }
-});
-
-canvas.addEventListener('pointermove',e=>{
-  if(e.pointerType==='touch'){
-    if(touchMap[e.pointerId]){touchMap[e.pointerId].x=e.clientX;touchMap[e.pointerId].y=e.clientY}
-    const ids=Object.keys(touchMap);
-    if(ids.length===2&&distStart>0){
-      const a=touchMap[ids[0]],b=touchMap[ids[1]];
-      const d=Math.hypot(a.x-b.x,a.y-b.y);
-      cam.dist=Math.max(6,Math.min(35,pinchStart*(distStart/d)));
-      updateCamera();
-      return;
+/* ============ PATHFINDING ============ */
+function findPath(sx,sy,gx,gy,f){
+  var g=state.grids[f];
+  if(sx===gx&&sy===gy)return [{x:sx,y:sy}];
+  var W=state.gridW,H=state.gridH;
+  var seen={},prev={};
+  function key(x,y){return x+','+y}
+  var q=[{x:sx,y:sy}];
+  seen[key(sx,sy)]=true;
+  var head=0;
+  while(head<q.length){
+    var c=q[head++];
+    var dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+    for(var i=0;i<4;i++){
+      var nx=c.x+dirs[i][0],ny=c.y+dirs[i][1];
+      if(nx<0||nx>=W||ny<0||ny>=H)continue;
+      var k=key(nx,ny);
+      if(seen[k])continue;
+      var cell=g[ny][nx];
+      var isGoal=(nx===gx&&ny===gy);
+      if(cell&&!isGoal)continue;
+      seen[k]=true;prev[k]=c;
+      if(isGoal){
+        var path=[],p={x:nx,y:ny};
+        while(p){path.unshift(p);p=prev[key(p.x,p.y)]}
+        return path;
+      }
+      q.push({x:nx,y:ny});
     }
   }
-  if(state.placingGhost){
-    const c=screenToFloor(e.clientX,e.clientY);
-    if(c)moveGhost(c.x,c.z);
-  }
-  if(!isDragging)return;
-  const dx=e.clientX-lastX,dy=e.clientY-lastY;
-  lastX=e.clientX;lastY=e.clientY;
-  if(e.pointerType==='touch'||e.buttons&1){
-    cam.theta-=dx*.008;
-    cam.phi=Math.max(.35,Math.min(1.4,cam.phi+dy*.006));
-  } else {
-    cam.target.x-=dx*.02;cam.target.z-=dy*.02;
-  }
-  updateCamera();
-});
-
-canvas.addEventListener('pointerup',e=>{
-  if(e.pointerType==='touch'){
-    delete touchMap[e.pointerId];
-    if(!Object.keys(touchMap).length){isDragging=false;activePtr=null;distStart=0}
-  } else {isDragging=false}
-  try{canvas.releasePointerCapture(e.pointerId)}catch{}
-  // клик — если не было движения
-  const dx=e.clientX-lastX,dy=e.clientY-lastY;
-  if(Math.hypot(dx,dy)<6&&e.pointerType!=='touch'){
-    handleClick(e.clientX,e.clientY);
-  } else if(e.pointerType==='touch'){
-    const moved=Math.hypot(e.clientX-(lastX||e.clientX),e.clientY-(lastY||e.clientY));
-    if(moved<8)handleClick(e.clientX,e.clientY);
-  }
-});
-
-canvas.addEventListener('contextmenu',e=>e.preventDefault());
-canvas.addEventListener('wheel',e=>{
-  e.preventDefault();
-  cam.dist=Math.max(6,Math.min(35,cam.dist+e.deltaY*.02));
-  updateCamera();
-},{passive:false});
-
-function screenToFloor(clientX,clientY){
-  const r=canvas.getBoundingClientRect();
-  ndc.x=((clientX-r.left)/r.width)*2-1;
-  ndc.y=-((clientY-r.top)/r.height)*2+1;
-  ray.setFromCamera(ndc,camera);
-  const plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
-  const point=new THREE.Vector3();
-  if(ray.ray.intersectPlane(plane,point))return {x:point.x,z:point.z};
   return null;
 }
 
-function handleClick(cx,cy){
-  const r=canvas.getBoundingClientRect();
-  ndc.x=((cx-r.left)/r.width)*2-1;
-  ndc.y=-((cy-r.top)/r.height)*2+1;
-  ray.setFromCamera(ndc,camera);
-
-  // если ставим предмет
-  if(state.placingType){
-    const c=screenToFloor(cx,cy);
-    if(!c)return;
-    const cell=findCell(c.x,c.z);
-    if(!cell)return;
-    const def=ITEMS[state.placingType];
-    if(state.money<def.cost){toast('Не хватает денег');cancelPlacing();return}
-    const placed=placeItem(state.placingType,cell.gx,cell.gy,true);
-    if(placed){
-      state.money-=def.cost;
-      toast('-'+def.cost+' ₽ · '+def.name);
-      updateHUD();save();
-    }
-    cancelPlacing();
-    return;
-  }
-
-  // raycast по объектам
-  const hits=ray.intersectObjects(scene.children,true);
-  for(const h of hits){
-    let o=h.object;
-    while(o&&!o.userData.rtItem)o=o.parent;
-    if(o&&o.userData.rtItem){
-      const item=o.userData.rtItem;
-      // плита → меню готовки
-      if(item.cook){openCookMenu(item);return}
-      // касса
-      if(item.type==='register'){toast('💵 Касса: '+state.stats.served+' гостей · '+state.stats.earned+' ₽');return}
-    }
-    // клиент
-    let c=o;
-    while(c&&!c.userData.rtCustomer)c=c.parent;
-    if(c&&c.userData.rtCustomer){clickCustomer(c.userData.rtCustomer);return}
-  }
-}
-
-/* ==========================================================
-   КЛИЕНТЫ
-   ========================================================== */
-const SKIN=[0xf0c8a0,0xd4a373,0x8b5a3a,0x4a2a1a];
-const SHIRT=[0xff4d6d,0x52b788,0x3a86ff,0xf4a261,0x7c5cff,0x00b4d8,0xffd166];
-
-function buildCustomerMesh(){
-  const g=new THREE.Group();
-  const skin=SKIN[~~(Math.random()*SKIN.length)];
-  const shirt=SHIRT[~~(Math.random()*SHIRT.length)];
-  // тело
-  const body=new THREE.Mesh(new THREE.CapsuleGeometry?new THREE.CapsuleGeometry(.22,.4,4,10):new THREE.CylinderGeometry(.22,.22,.7,10),mat(shirt,.8));
-  body.position.y=.55;body.castShadow=true;g.add(body);
-  // голова
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.2,14,10),mat(skin,.8));
-  head.position.y=1.1;head.castShadow=true;g.add(head);
-  // волосы
-  const hair=new THREE.Mesh(new THREE.SphereGeometry(.21,14,10,0,Math.PI*2,0,Math.PI*.55),mat(0x2a1a0a,.9));
-  hair.position.y=1.13;g.add(hair);
-  return g;
-}
-
-function spawnCustomer(){
-  if(state.customers.length>=8)return;
-  // нужен хотя бы один стол-с местом
-  const tables=state.placed.filter(p=>(p.type==='table2'||p.type==='table4'));
-  if(!tables.length)return;
-  const mesh=buildCustomerMesh();
-  const doorX=TW/2+.5,doorZ=0;
-  mesh.position.set(doorX,0,doorZ);
-  scene.add(mesh);
-
-  const c={
-    id:state.nextId++,mesh,state:'entering',
-    target:{x:doorX-.8,z:doorZ},
-    table:null,seat:null,
-    dish:null,patience:22,timer:0,bubble:null,
-    homeX:doorX,homeZ:doorZ,skinTone:0,
+/* ============ CUSTOMERS ============ */
+function newCustomer(){
+  var skinC=['#f0c8a0','#d4a373','#8b5a3a','#4a2a1a'][Math.floor(Math.random()*4)];
+  var shirtC=['#e85a3a','#52b788','#3a86ff','#f4a261','#7c5cff','#00b4d8','#ffd166'][Math.floor(Math.random()*7)];
+  var hp=20 + (state.upgrades.cleaner||0)*2;
+  return {
+    x:Math.floor(state.gridW/2),y:state.gridH-1,
+    px:state.gridW/2-.5,py:state.gridH-.5,
+    state:'entering',path:null,pIdx:0,
+    seat:null,order:null,
+    patience:hp,timer:0,
+    skin:skinC,shirt:shirtC,
+    phase:Math.random()*6,dir:0
   };
-  mesh.userData.rtCustomer=c;
+}
+function findSeat(){
+  for(var i=0;i<state.items.length;i++){
+    var it=state.items[i];
+    if(it.floor!==state.floor)continue;
+    if(it.type!=='table2'&&it.type!=='table4')continue;
+    if(it.seatCount>=(ITEMS[it.type].seats||0))continue;
+    // Найти свободное место
+    for(var j=0;j<it.seats.length;j++){
+      var s=it.seats[j];
+      var cell=grid()[s.y]&&grid()[s.y][s.x];
+      if(cell)continue;
+      // Проверка что место не занято другим клиентом
+      var taken=false;
+      for(var k=0;k<state.customers.length;k++){
+        var c=state.customers[k];
+        if(c.seat&&c.seat.item===it&&c.seat.idx===j){taken=true;break}
+      }
+      if(taken)continue;
+      return {item:it,idx:j,pos:s};
+    }
+  }
+  return null;
+}
+function spawnCustomer(){
+  if(state.customers.length>=12)return;
+  var s=findSeat();
+  if(!s)return;
+  var c=newCustomer();
+  c.seat={item:s.item,idx:s.idx,pos:s.pos};
+  s.item.seatCount++;
   state.customers.push(c);
 }
 
-function findFreeSeat(customer){
-  const tables=state.placed.filter(p=>(p.type==='table2'||p.type==='table4'));
-  for(const t of tables){
-    const capacity=ITEMS[t.type].seats;
-    const taken=(t.extra&&t.extra.seats)||0;
-    if(taken<capacity){
-      t.extra=t.extra||{seats:0};
-      t.extra.seats=taken+1;
-      return t;
+function updateCustomer(c,dt){
+  c.timer+=dt;
+  if(c.state==='entering'){
+    // Клиент у двери. Ищем путь до своего места
+    var s=c.seat.pos;
+    var p=findPath(c.x,c.y,s.x,s.y,c.seat.item.floor);
+    if(p){c.path=p;c.pIdx=0;c.state='walking'}
+    else{c.state='leaving';c.seat.item.seatCount--}
+  }
+  else if(c.state==='walking'){
+    if(!c.path||c.pIdx>=c.path.length){
+      c.state='ordering';c.timer=0;return;
+    }
+    var tgt=c.path[c.pIdx];
+    var tx=tgt.x,ty=tgt.y;
+    var dx=tx-c.px,dy=ty-c.py;
+    var d=Math.sqrt(dx*dx+dy*dy);
+    if(d<.05){c.pIdx++;return}
+    var spd=3.5*dt;
+    var step=Math.min(d,spd);
+    c.px+=dx/d*step;c.py+=dy/d*step;
+    c.dir=Math.atan2(dy,dx);
+    c.phase+=dt*10;
+  }
+  else if(c.state==='ordering'){
+    if(c.timer>.8){
+      var menu=state.unlockedDishes;
+      var id=menu[Math.floor(Math.random()*menu.length)];
+      c.order=id;c.state='waiting';c.timer=0;
     }
   }
-  return null;
-}
-
-function releaseSeat(t){
-  if(!t||!t.extra)return;
-  t.extra.seats=Math.max(0,(t.extra.seats||0)-1);
-}
-
-function showBubble(c,dish){
-  if(c.bubble){scene.remove(c.bubble);c.bubble=null}
-  if(!dish)return;
-  const cv=document.createElement('canvas');cv.width=128;cv.height=128;
-  const ctx=cv.getContext('2d');
-  ctx.fillStyle='rgba(0,0,0,.85)';ctx.beginPath();ctx.arc(64,50,46,0,7);ctx.fill();
-  ctx.beginPath();ctx.moveTo(50,90);ctx.lineTo(64,110);ctx.lineTo(78,90);ctx.fill();
-  ctx.font='46px serif';ctx.textAlign='center';ctx.textBaseline='middle';
-  const emo={burger:'🍔',pizza:'🍕',salad:'🥗',soup:'🍜',steak:'🥩',sushi:'🍣',pasta:'🍝',fish:'🐟',sandwich:'🥪',icecream:'🍦',cake:'🍰',coffee:'☕',tea:'🍵',juice:'🧃',water:'💧',fries:'🍟',hotdog:'🌭',taco:'🌮',wings:'🍗',ramen:'🍜'}[dish];
-  ctx.fillText(emo||'🍽️',64,52);
-  const tex=new THREE.CanvasTexture(cv);
-  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
-  spr.scale.set(.9,.9,1);
-  spr.position.set(0,2,c.mesh.position.z-c.mesh.position.z);
-  c.mesh.add(spr);
-  spr.position.set(0,1.9,0);
-  c.bubble=spr;
-}
-
-function moveTowards(obj,tx,tz,dt,spd){
-  const dx=tx-obj.position.x,dz=tz-obj.position.z;
-  const d=Math.hypot(dx,dz);
-  if(d<.05)return true;
-  const step=Math.min(d,spd*dt);
-  obj.position.x+=dx/d*step;
-  obj.position.z+=dz/d*step;
-  obj.rotation.y=Math.atan2(dx,dz);
-  return false;
-}
-
-function updateCustomers(dt){
-  // спавн
-  state.spawnTimer-=dt;
-  if(state.spawnTimer<=0){
-    state.spawnTimer=3+Math.random()*3;
-    const openChairs=state.placed.filter(p=>(p.type==='table2'||p.type==='table4')).reduce((a,t)=>a+(ITEMS[t.type].seats-((t.extra&&t.extra.seats)||0)),0);
-    if(openChairs>0&&Math.random()<.85)spawnCustomer();
+  else if(c.state==='waiting'){
+    if(c.timer>c.patience){
+      c.state='angry';c.timer=0;
+      state.rep=Math.max(0,state.rep-3);
+      updateHUD();
+    }
   }
-  for(const c of state.customers.slice()){
-    c.timer+=dt;
-    if(c.state==='entering'){
-      if(moveTowards(c.mesh,c.target.x,c.target.z,dt,1.4)){
-        // ищем стол
-        const t=findFreeSeat(c);
-        if(!t){c.state='leaving';c.target={x:c.homeX,z:c.homeZ};continue}
-        c.table=t;
-        c.state='toward_table';
-        c.target={x:gxToX(t.gx),z:gyToZ(t.gy)};
-        c.seatAngle=Math.atan2(c.mesh.position.x-gxToX(t.gx),c.mesh.position.z-gyToZ(t.gy));
-        // ставим чуть рядом со столом
-        c.target.x=gxToX(t.gx)+Math.cos(c.seatAngle)*.55;
-        c.target.z=gyToZ(t.gy)+Math.sin(c.seatAngle)*.55;
-      }
+  else if(c.state==='angry'){
+    if(c.timer>.6){
+      c.seat.item.seatCount--;
+      c.state='leaving';c.timer=0;
+      c.path=findPath(c.x,c.y,Math.floor(state.gridW/2),state.gridH-1,c.seat.item.floor);
+      c.pIdx=0;
     }
-    else if(c.state==='toward_table'){
-      if(moveTowards(c.mesh,c.target.x,c.target.z,dt,1.3)){
-        c.state='ordering';
-        c.timer=0;
-      }
+  }
+  else if(c.state==='eating'){
+    if(c.timer>3.5){
+      var dish=DM[c.order];
+      var mult=state.upgrades.card?1.5:1;
+      var earn=Math.round(dish.price*mult);
+      var tip=Math.round(earn*.15);
+      state.money+=earn+tip;
+      state.stats.served++;
+      state.stats.earned+=earn+tip;
+      state.rep=Math.min(100,state.rep+1);
+      toast('💵 +'+(earn+tip)+' ₽');
+      c.seat.item.seatCount--;
+      c.state='leaving';c.timer=0;
+      c.path=findPath(c.x,c.y,Math.floor(state.gridW/2),state.gridH-1,c.seat.item.floor);
+      c.pIdx=0;
+      updateHUD();
     }
-    else if(c.state==='ordering'){
-      if(c.timer>.6){
-        // выбираем случайное блюдо из открытых
-        const menu=state.unlocked.length?state.unlocked:['burger'];
-        c.dish=menu[~~(Math.random()*menu.length)];
-        showBubble(c,c.dish);
-        c.state='waiting_food';
-        c.timer=0;
-      }
-    }
-    else if(c.state==='waiting_food'){
-      if(c.timer>c.patience){
-        c.state='angry';
-        c.timer=0;
-        state.reputation=Math.max(0,state.reputation-3);
-        updateHUD();
-      }
-    }
-    else if(c.state==='angry'){
-      if(c.timer>.8){
-        releaseSeat(c.table);
-        if(c.bubble){scene.remove(c.bubble);c.bubble=null}
-        c.state='leaving';
-        c.target={x:c.homeX,z:c.homeZ};
-      }
-    }
-    else if(c.state==='eating'){
-      if(c.timer>4){
-        // оплата
-        const dish=DISH[c.dish];
-        const tip=Math.round(dish.price*.15);
-        state.money+=dish.price+tip;
-        state.stats.served++;state.stats.earned+=dish.price+tip;
-        state.reputation=Math.min(100,state.reputation+1);
-        updateHUD();save();
-        toast('💵 +'+(dish.price+tip)+' ₽');
-        if(c.bubble){scene.remove(c.bubble);c.bubble=null}
-        releaseSeat(c.table);
-        c.state='leaving';
-        c.target={x:c.homeX,z:c.homeZ};
-      }
-    }
-    else if(c.state==='leaving'){
-      if(moveTowards(c.mesh,c.target.x,c.target.z,dt,1.4)){
-        scene.remove(c.mesh);
-        state.customers=state.customers.filter(x=>x!==c);
-      }
+  }
+  else if(c.state==='leaving'){
+    if(!c.path||c.pIdx>=c.path.length){
+      c.done=true;
+    } else {
+      var tgt2=c.path[c.pIdx];
+      var dx2=tgt2.x-c.px,dy2=tgt2.y-c.py;
+      var d2=Math.sqrt(dx2*dx2+dy2*dy2);
+      if(d2<.05){c.pIdx++;return}
+      var spd2=3.5*dt;
+      var step2=Math.min(d2,spd2);
+      c.px+=dx2/d2*step2;c.py+=dy2/d2*step2;
+      c.phase+=dt*10;
     }
   }
 }
 
 function clickCustomer(c){
-  // если ждёт еду — ищем готовое блюдо
-  if(c.state!=='waiting_food'){toast('Гость не ждёт заказ');return}
-  // ищем готовое блюдо на любом counter
-  const counters=state.placed.filter(p=>ITEMS[p.type].serve);
-  for(const cnt of counters){
-    cnt.ready=cnt.ready||[];
-    const idx=cnt.ready.findIndex(d=>d===c.dish);
-    if(idx>=0){
-      cnt.ready.splice(idx,1);
-      // убираем меш
-      const found=(cnt.readyMeshes||[]).findIndex(m=>m.dishId===c.dish);
-      if(found>=0){
-        const m=cnt.readyMeshes[found];
-        scene.remove(m.mesh);
-        cnt.readyMeshes.splice(found,1);
-      }
-      c.state='eating';c.timer=0;
-      if(c.bubble){scene.remove(c.bubble);c.bubble=null}
-      snd(880,.08,'sine',.06);
-      return;
-    }
+  if(c.state!=='waiting'){toast('Гость не ждёт заказ');return}
+  if(!c.order){toast('Гость ещё не выбрал');return}
+  if((state.storage[c.order]||0)<=0){
+    toast('Готовим: '+DM[c.order].emoji+' '+DM[c.order].name);
+    return;
   }
-  toast('Нужно приготовить: '+DISH[c.dish].name);
+  state.storage[c.order]--;
+  c.state='eating';c.timer=0;
+  snd(880,.08,'sine',.06);
 }
 
-/* ==========================================================
-   ГОТОВКА
-   ========================================================== */
-function startCooking(item,dishId){
-  item.cook=item.cook||[];
-  if(item.cook.length>=3){toast('Плита занята');return}
-  const dish=DISH[dishId];
-  if(!dish)return;
+/* ============ COOKING ============ */
+function startCooking(it,dishId){
+  var dish=DM[dishId];if(!dish)return;
+  if(!it.jobs)it.jobs=[];
+  if(it.jobs.length>=3){toast('Плита занята');return}
   if(state.money<dish.cost){toast('Не хватает на ингредиенты');return}
   state.money-=dish.cost;
-  updateHUD();
-  const job={dish:dishId,timer:dish.time};
-  item.cook.push(job);
-  // визуальная индикация
-  const dot=new THREE.Mesh(new THREE.SphereGeometry(.08,8,8),new THREE.MeshBasicMaterial({color:0xff3300}));
-  dot.position.set((Math.random()-.5)*.6,.95,(Math.random()-.5)*.6);
-  item.mesh.add(dot);
-  job.dot=dot;
+  var mult=state.upgrades.fast?(1-0.25*state.upgrades.fast):1;
+  it.jobs.push({dish:dishId,timer:dish.time*mult,total:dish.time*mult});
   snd(440,.05,'square',.04);
+  updateHUD();
 }
-
-function tickCooking(dt){
-  for(const item of state.placed){
-    if(!item.cook||!item.cook.length)continue;
-    for(const job of item.cook.slice()){
+function updateCooking(dt){
+  for(var i=0;i<state.items.length;i++){
+    var it=state.items[i];
+    if(it.floor!==state.floor||!it.jobs)continue;
+    for(var j=it.jobs.length-1;j>=0;j--){
+      var job=it.jobs[j];
       job.timer-=dt;
       if(job.timer<=0){
-        item.cook.splice(item.cook.indexOf(job),1);
-        if(job.dot){item.mesh.remove(job.dot);job.dot.geometry.dispose();job.dot.material.dispose()}
-        // ищем свободный counter
-        const counters=state.placed.filter(p=>ITEMS[p.type].serve);
-        let target=null;
-        for(const c of counters){
-          c.ready=c.ready||[];
-          if(c.ready.length<4){target=c;break}
-        }
-        if(target){
-          target.ready.push(job.dish);
-          target.readyMeshes=target.readyMeshes||[];
-          const m=buildDishMesh(DISH[job.dish]);
-          const idx=target.ready.length-1;
-          m.position.set(target.mesh.position.x+(idx-1.5)*.35,1,target.mesh.position.z);
-          m.rotation.y=Math.random()*7;
-          scene.add(m);
-          target.readyMeshes.push({dishId:job.dish,mesh:m});
-          snd(1000,.1,'sine',.05);
-        } else {
-          toast('Стол-раздача забит!');
-        }
+        it.jobs.splice(j,1);
+        state.storage[job.dish]=(state.storage[job.dish]||0)+1;
+        snd(1000,.1,'sine',.05);
+        updateStorageUI();
       }
     }
   }
 }
 
-/* ==========================================================
-   ИГРОВОЙ ЦИКЛ
-   ========================================================== */
-let lastT=performance.now();
+/* ============ WAITER ============ */
+var waiterCD=0;
+function updateWaiter(dt){
+  if(!state.upgrades.waiter)return;
+  waiterCD-=dt;
+  if(waiterCD>0)return;
+  waiterCD=Math.max(1, 4-state.upgrades.waiter*.7);
+  for(var i=0;i<state.customers.length;i++){
+    var c=state.customers[i];
+    if(c.state!=='waiting'||!c.order)continue;
+    if((state.storage[c.order]||0)>0){
+      state.storage[c.order]--;
+      c.state='eating';c.timer=0;
+      snd(880,.08,'sine',.06);
+      break;
+    }
+  }
+}
+
+/* ============ DELIVERY ============ */
+function updateDelivery(dt){
+  if(!state.upgrades.delivery)return;
+  state.deliveryTimer-=dt;
+  if(state.deliveryTimer<=0){
+    state.deliveryTimer=15;
+    var income=200*state.upgrades.delivery;
+    state.money+=income;
+    state.stats.earned+=income;
+    toast('🚗 Онлайн-заказ: +'+income+' ₽');
+    updateHUD();
+  }
+}
+
+/* ============ MAIN LOOP ============ */
+var lastT=0;
 function loop(T){
-  const dt=Math.min(.05,(T-lastT)/1000)*state.speed;
-  lastT=T;
-  updateCustomers(dt);
-  tickCooking(dt);
-  // лёгкая анимация светильников
-  warm1.intensity=.75+Math.sin(T*.002)*.1;
-  warm2.intensity=.75+Math.cos(T*.0025)*.1;
-  renderer.render(scene,camera);
+  var dt=Math.min(.05,(T-lastT)/1000);lastT=T;
+  state.time+=dt;
+  state.spawnTimer-=dt;
+  var rate=1+0.3*(state.upgrades.marketing||0);
+  if(state.spawnTimer<=0){
+    state.spawnTimer=rnd(2.5,5)/rate;
+    if(Math.random()<.9)spawnCustomer();
+  }
+  for(var i=state.customers.length-1;i>=0;i--){
+    var c=state.customers[i];
+    updateCustomer(c,dt);
+    if(c.done){state.customers.splice(i,1)}
+  }
+  updateCooking(dt);
+  updateWaiter(dt);
+  updateDelivery(dt);
+  render();
   requestAnimationFrame(loop);
 }
 
-/* ==========================================================
-   HUD и панели
-   ========================================================== */
-function updateHUD(){
-  document.getElementById('money').textContent=Math.floor(state.money).toLocaleString('ru-RU');
-  document.getElementById('cust').textContent=state.customers.length;
-  document.getElementById('rep').textContent=Math.round(state.reputation);
+/* ============ RENDER ============ */
+function render(){
+  var g=grid();
+  ctx.fillStyle='#0e0c08';
+  ctx.fillRect(0,0,W,H);
+  var TILE=48*state.cam.z;
+  var cx=W/2,cy=H/2;
+  var camX=state.cam.x,camY=state.cam.y;
+  function w2sx(wx){return (wx-camX)*TILE+cx}
+  function w2sy(wy){return (wy-camY)*TILE+cy}
+  // пол
+  for(var y=0;y<state.gridH;y++){
+    for(var x=0;x<state.gridW;x++){
+      var px=w2sx(x),py=w2sy(y);
+      if(px<-TILE||px>W||py<-TILE||py>H)continue;
+      ctx.fillStyle=(x+y)%2===0?'#2e1f14':'#241810';
+      ctx.fillRect(px,py,TILE,TILE);
+    }
+  }
+  // стены
+  ctx.strokeStyle='#4a2e1f';
+  ctx.lineWidth=Math.max(4,TILE*.2);
+  ctx.strokeRect(w2sx(-.1),w2sy(-.1),(state.gridW+.2)*TILE,(state.gridH+.2)*TILE);
+  // дверь (снизу в центре)
+  var doorX=w2sx(Math.floor(state.gridW/2)-.5);
+  var doorY=w2sy(state.gridH-.05);
+  ctx.fillStyle='#7a4a20';
+  ctx.fillRect(doorX,doorY-TILE*.15,TILE*2,TILE*.15);
+  // мебель
+  for(var i=0;i<state.items.length;i++){
+    var it=state.items[i];
+    if(it.floor!==state.floor)continue;
+    drawItem(it,w2sx,w2sy,TILE);
+  }
+  // клиенты
+  for(var j=0;j<state.customers.length;j++){
+    var c=state.customers[j];
+    drawCustomer(c,w2sx,w2sy,TILE);
+  }
+  // апгрейд-эффекты (можно позже)
 }
-let toastTimer=0;
+
+function drawItem(it,w2sx,w2sy,TILE){
+  var px=w2sx(it.x),py=w2sy(it.y);
+  var def=ITEMS[it.type];
+  var bob=Math.sin(state.time*2+it.x+it.y)*2;
+  if(it.type==='table2'||it.type==='table4'){
+    ctx.fillStyle='#3a2418';
+    ctx.beginPath();
+    ctx.arc(px+TILE/2,py+TILE/2,TILE*.4,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle='#8b5a3a';
+    ctx.beginPath();
+    ctx.arc(px+TILE/2,py+TILE/2,TILE*.35,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle='#f5f0e8';
+    ctx.font='bold '+(TILE*.5)+'px serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(def.emoji,px+TILE/2,py+TILE/2+bob);
+  } else if(it.type==='stove'){
+    ctx.fillStyle='#3a3a44';
+    ctx.fillRect(px+TILE*.1,py+TILE*.1,TILE*.8,TILE*.8);
+    ctx.fillStyle='#555a63';
+    ctx.fillRect(px+TILE*.15,py+TILE*.15,TILE*.7,TILE*.7);
+    // огонёк если что-то готовится
+    if(it.jobs&&it.jobs.length){
+      ctx.fillStyle='#ff6b1a';
+      ctx.beginPath();
+      ctx.arc(px+TILE*.75,py+TILE*.25,4+Math.random()*2,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.fillStyle='#f5f0e8';
+    ctx.font='bold '+(TILE*.42)+'px serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(def.emoji,px+TILE/2,py+TILE/2);
+    // прогресс
+    if(it.jobs&&it.jobs.length){
+      var prog=1-it.jobs[0].timer/it.jobs[0].total;
+      ctx.fillStyle='rgba(0,0,0,.6)';
+      ctx.fillRect(px+TILE*.1,py+TILE*.88,TILE*.8,6);
+      ctx.fillStyle='#f0b040';
+      ctx.fillRect(px+TILE*.1,py+TILE*.88,TILE*.8*prog,6);
+    }
+  } else {
+    ctx.fillStyle='rgba(0,0,0,.3)';
+    ctx.beginPath();
+    ctx.arc(px+TILE/2,py+TILE/2,TILE*.42,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle=def.color||'#666';
+    ctx.beginPath();
+    ctx.arc(px+TILE/2,py+TILE/2,TILE*.36,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.font='bold '+(TILE*.5)+'px serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(def.emoji,px+TILE/2,py+TILE/2+bob*.3);
+  }
+}
+
+function drawCustomer(c,w2sx,w2sy,TILE){
+  var px=w2sx(c.px)+TILE/2;
+  var py=w2sy(c.py)+TILE/2;
+  var bob=Math.sin(c.phase)*2;
+  py+=bob;
+  // тень
+  ctx.fillStyle='rgba(0,0,0,.3)';
+  ctx.beginPath();
+  ctx.ellipse(px,py+TILE*.35,TILE*.3,TILE*.12,0,0,Math.PI*2);
+  ctx.fill();
+  // тело
+  ctx.fillStyle=c.shirt;
+  ctx.beginPath();
+  ctx.arc(px,py+TILE*.05,TILE*.28,0,Math.PI*2);
+  ctx.fill();
+  // голова
+  ctx.fillStyle=c.skin;
+  ctx.beginPath();
+  ctx.arc(px,py-TILE*.25,TILE*.22,0,Math.PI*2);
+  ctx.fill();
+  // волосы
+  ctx.fillStyle='#2a1a0a';
+  ctx.beginPath();
+  ctx.arc(px,py-TILE*.32,TILE*.22,Math.PI,Math.PI*2);
+  ctx.fill();
+  // глаза
+  ctx.fillStyle='#111';
+  ctx.beginPath();
+  ctx.arc(px-TILE*.07,py-TILE*.25,1.8,0,Math.PI*2);
+  ctx.arc(px+TILE*.07,py-TILE*.25,1.8,0,Math.PI*2);
+  ctx.fill();
+  // пузырь с заказом
+  if(c.state==='waiting'&&c.order){
+    var by=py-TILE*.9+Math.sin(state.time*3)*2;
+    ctx.fillStyle='rgba(255,255,255,.95)';
+    ctx.beginPath();
+    ctx.arc(px,by,TILE*.35,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(px-6,by+TILE*.28);
+    ctx.lineTo(px,by+TILE*.5);
+    ctx.lineTo(px+6,by+TILE*.28);
+    ctx.fill();
+    ctx.fillStyle='#111';
+    ctx.font='bold '+(TILE*.5)+'px serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(DM[c.order].emoji,px,by);
+    // прогресс терпения
+    var pp=1-c.timer/c.patience;
+    ctx.fillStyle='rgba(0,0,0,.5)';
+    ctx.fillRect(px-TILE*.35,by+TILE*.55,TILE*.7,4);
+    ctx.fillStyle=pp>.3?'#52b788':'#e85a3a';
+    ctx.fillRect(px-TILE*.35,by+TILE*.55,TILE*.7*pp,4);
+  }
+  if(c.state==='angry'){
+    ctx.font='bold '+(TILE*.6)+'px serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('😠',px,py-TILE*.9);
+  }
+  if(c.state==='eating'){
+    ctx.font='bold '+(TILE*.5)+'px serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('😋',px,py-TILE*.85);
+  }
+}
+
+/* ============ INPUT ============ */
+var touchMode=false;
+var dragStart=null,lastDrag=null;
+var pinchStartDist=0,pinchStartZ=1;
+
+cv.addEventListener('pointerdown',function(e){
+  if(e.pointerType==='touch')touchMode=true;
+  cv.setPointerCapture(e.pointerId);
+  if(pinchStartDist&&e.pointerType==='touch')return;
+  dragStart={x:e.clientX,y:e.clientY,t:Date.now()};
+  lastDrag={x:e.clientX,y:e.clientY};
+});
+cv.addEventListener('pointermove',function(e){
+  if(!dragStart)return;
+  if(e.pointerType==='touch'){
+    // Мультитач
+    var ptrs=activePtrs();
+    if(ptrs.length===2){
+      var d=Math.hypot(ptrs[0].x-ptrs[1].x,ptrs[0].y-ptrs[1].y);
+      if(!pinchStartDist){pinchStartDist=d;pinchStartZ=state.cam.z}
+      else{state.cam.z=clamp(pinchStartZ*(d/pinchStartDist),.5,2.5)}
+      return;
+    }
+  }
+  var dx=e.clientX-lastDrag.x;
+  var dy=e.clientY-lastDrag.y;
+  state.cam.x-=dx/(48*state.cam.z);
+  state.cam.y-=dy/(48*state.cam.z);
+  lastDrag={x:e.clientX,y:e.clientY};
+});
+var pointers={};
+cv.addEventListener('pointerdown',function(e){pointers[e.pointerId]={x:e.clientX,y:e.clientY}});
+cv.addEventListener('pointermove',function(e){if(pointers[e.pointerId]){pointers[e.pointerId].x=e.clientX;pointers[e.pointerId].y=e.clientY}});
+function activePtrs(){return Object.keys(pointers).map(function(k){return pointers[k]})}
+cv.addEventListener('pointerup',function(e){
+  delete pointers[e.pointerId];
+  pinchStartDist=0;
+  if(!dragStart)return;
+  var dx=e.clientX-dragStart.x;
+  var dy=e.clientY-dragStart.y;
+  var moved=Math.sqrt(dx*dx+dy*dy);
+  var dt=Date.now()-dragStart.t;
+  if(moved<8&&dt<400){
+    handleTap(e.clientX,e.clientY);
+  }
+  dragStart=null;
+});
+cv.addEventListener('pointercancel',function(){dragStart=null;pinchStartDist=0});
+cv.addEventListener('wheel',function(e){
+  e.preventDefault();
+  state.cam.z=clamp(state.cam.z*(1-e.deltaY*.001),.5,2.5);
+},{passive:false});
+
+function handleTap(sx,sy){
+  var TILE=48*state.cam.z;
+  var wx=(sx-W/2)/TILE+state.cam.x;
+  var wy=(sy-H/2)/TILE+state.cam.y;
+  var gx=Math.floor(wx),gy=Math.floor(wy);
+  if(gx<0||gx>=state.gridW||gy<0||gy>=state.gridH)return;
+  // Расстановка
+  if(state.placing){
+    var cost=ITEMS[state.placing].cost;
+    if(state.money<cost){toast('Не хватает');cancelPlacing();return}
+    var placed=placeItem(state.placing,gx,gy,state.floor);
+    if(placed){
+      state.money-=cost;
+      toast('-'+cost+' ₽ '+ITEMS[state.placing].name);
+      updateHUD();save();
+    } else {
+      toast('Клетка занята');
+    }
+    cancelPlacing();
+    return;
+  }
+  // Клиент — сначала по клиентам
+  var TILE2=48*state.cam.z;
+  for(var i=0;i<state.customers.length;i++){
+    var c=state.customers[i];
+    var cx=(c.px-state.cam.x+.5)*TILE2+W/2;
+    var cy=(c.py-state.cam.y+.5)*TILE2+H/2;
+    if(Math.abs(sx-cx)<TILE2*.5&&Math.abs(sy-cy)<TILE2*.6){
+      clickCustomer(c);return;
+    }
+  }
+  // Объект
+  var cell=grid()[gy]&&grid()[gy][gx];
+  if(cell){
+    if(cell.type==='stove'){openCookMenu(cell);return}
+    if(cell.type==='register'){toast('💰 Касса · гостей: '+state.stats.served+' · '+state.stats.earned+' ₽');return}
+    if(cell.type==='table2'||cell.type==='table4'){toast('Стол на '+ITEMS[cell.type].seats);return}
+    // Долгий тап — удалить
+    if(dragStart&&Date.now()-dragStart.t>800){
+      if(confirm('Убрать '+ITEMS[cell.type].name+'?')){
+        state.money+=Math.floor(ITEMS[cell.type].cost*.5);
+        removeItem(cell);updateHUD();save();
+      }
+    }
+    return;
+  }
+  toast('Пустая клетка');
+}
+
+/* Двойной клик = удалить */
+var lastTapTime=0,lastTapCell=null;
+cv.addEventListener('dblclick',function(e){
+  var TILE=48*state.cam.z;
+  var wx=(e.clientX-W/2)/TILE+state.cam.x;
+  var wy=(e.clientY-H/2)/TILE+state.cam.y;
+  var gx=Math.floor(wx),gy=Math.floor(wy);
+  var cell=grid()[gy]&&grid()[gy][gx];
+  if(cell){
+    if(confirm('Убрать '+ITEMS[cell.type].name+'? Вернём 50% цены.')){
+      state.money+=Math.floor(ITEMS[cell.type].cost*.5);
+      removeItem(cell);updateHUD();save();
+    }
+  }
+});
+
+/* ============ UI ============ */
+function updateHUD(){
+  $('pMoney').textContent='💰 '+Math.floor(state.money).toLocaleString('ru-RU');
+  $('pRep').textContent='⭐ '+Math.round(state.rep);
+  $('pCust').textContent='👥 '+state.customers.length;
+  $('pDay').textContent='📅 День '+state.floor;
+}
+function updateStorageUI(){
+  var el=$('storage');
+  var keys=Object.keys(state.storage).filter(function(k){return state.storage[k]>0});
+  if(!keys.length){el.innerHTML='';return}
+  el.innerHTML=keys.map(function(k){
+    var d=DM[k];if(!d)return '';
+    return '<div class="stchip">'+d.emoji+' '+state.storage[k]+'</div>';
+  }).join('');
+}
+var toastTimer=0;
 function toast(s){
-  const t=document.getElementById('toast');
+  var t=$('toast');
   t.textContent=s;t.classList.add('on');
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove('on'),1800);
+  toastTimer=setTimeout(function(){t.classList.remove('on')},1700);
 }
 
-const panel=document.getElementById('panel');
-const pbody=document.getElementById('pbody');
-const ptitle=document.getElementById('ptitle');
-document.getElementById('pclose').onclick=()=>panel.classList.remove('on');
+/* ============ PANELS ============ */
+var panel=$('panel'),pb=$('pb'),ptit=$('ptit');
+function closePanel(){panel.classList.remove('on')}
+$('px').onclick=closePanel;
 
-document.getElementById('bShop').onclick=openShop;
-document.getElementById('bMenu').onclick=openMenu;
-document.getElementById('bSpeed').onclick=()=>{
-  state.speed=state.speed===1?2:state.speed===2?3:1;
-  document.getElementById('bSpeed').textContent='⏩ '+state.speed+'×';
-};
-document.getElementById('bHelp').onclick=()=>{
-  ptitle.textContent='Как играть';
-  pbody.innerHTML=`
-    <div style="font-size:13.5px;line-height:1.7;opacity:.9">
-      <p><b>🎯 Цель:</b> построить прибыльный ресторан.</p>
-      <p style="margin-top:10px"><b>🛒 Магазин</b> — покупай столы, плиты, кассы и декор. После выбора тапни на пустую клетку пола.</p>
-      <p style="margin-top:10px"><b>📖 Меню</b> — открывай новые блюда за деньги. Чем дороже блюдо — тем больше прибыль.</p>
-      <p style="margin-top:10px"><b>🔥 Плита</b> — тапни по плите, выбери блюдо. Оно приготовится за N секунд и появится на «Столе-раздаче».</p>
-      <p style="margin-top:10px"><b>🧑‍🍳 Раздача</b> — купи стол-раздачу. Там копятся готовые блюда (до 4).</p>
-      <p style="margin-top:10px"><b>👥 Гости</b> — приходят, садятся за стол, показывают в пузыре желаемое блюдо. Тапни по гостю — если нужное блюдо есть на раздаче, он его получит и заплатит + чаевые.</p>
-      <p style="margin-top:10px"><b>⭐ Репутация</b> падает, если гости уходят без еды. Держи её высокой.</p>
-      <p style="margin-top:10px;opacity:.6"><b>Управление камерой:</b> ЛКМ/тап — выбрать. ПКМ/перетаскивание — вращение. Колесо/пинч — зум.</p>
-    </div>`;
-  panel.classList.add('on');
+$('bShop').onclick=function(){openShop()};
+$('bMenu').onclick=function(){openMenu()};
+$('bUpg').onclick=function(){openUpgrades()};
+$('bHelp').onclick=function(){openHelp()};
+$('bFloor').onclick=function(){
+  if(!state.upgrades.floor2){toast('Нужен апгрейд «Второй этаж»');return}
+  state.floor=state.floor?0:1;
+  $('bFloor').textContent='🏢 Этаж '+(state.floor+1);
+  save();
 };
 
 function openShop(){
-  ptitle.textContent='Магазин';
-  pbody.innerHTML='<div class="grid"></div>';
-  const g=pbody.querySelector('.grid');
-  Object.entries(ITEMS).forEach(([k,def])=>{
-    const c=document.createElement('div');
-    c.className='card'+(state.money<def.cost?' disabled':'');
-    c.innerHTML=`
-      <div class="emoji">${def.emoji}</div>
-      <div class="name">${def.name}</div>
-      <div class="cost">${def.cost.toLocaleString('ru-RU')} ₽</div>
-      ${def.seats?'<div class="sub">Мест: '+def.seats+'</div>':''}
-      ${def.cook?'<div class="sub">Готовит блюда</div>':''}
-      ${def.serve?'<div class="sub">Склад готового</div>':''}
-    `;
-    c.onclick=()=>{
+  ptit.textContent='Магазин';
+  pb.innerHTML='<div class="grid" id="gr"></div>';
+  var g=$('gr');
+  Object.keys(ITEMS).forEach(function(k){
+    var def=ITEMS[k];
+    var c=document.createElement('div');
+    c.className='card'+(state.money<def.cost?' dis':'');
+    c.innerHTML='<div class="emoji">'+def.emoji+'</div><div class="nm">'+def.name+'</div><div class="cost">'+def.cost.toLocaleString('ru-RU')+' ₽</div>'+
+      (def.seats?'<div class="sub">Мест: '+def.seats+'</div>':'')+
+      (def.cooks?'<div class="sub">Готовит до '+def.cooks+' блюд</div>':'')+
+      (def.block?'<div class="sub">Блокирует проход</div>':'');
+    c.onclick=function(){
       if(state.money<def.cost){toast('Не хватает');return}
-      panel.classList.remove('on');
-      startPlacing(k);
+      closePanel();
+      state.placing=k;
+      $('hint').classList.add('on');
+      toast('Тапни на пустую клетку');
     };
     g.appendChild(c);
   });
   panel.classList.add('on');
 }
 
-function startPlacing(type){
-  cancelPlacing();
-  state.placingType=type;
-  makeGhost(type);
-  document.getElementById('placehint').classList.add('on');
-}
 function cancelPlacing(){
-  state.placingType=null;
-  clearGhost();
-  document.getElementById('placehint').classList.remove('on');
+  state.placing=null;
+  $('hint').classList.remove('on');
 }
 
 function openMenu(){
-  ptitle.textContent='Меню ресторана';
-  pbody.innerHTML='';
-  pbody.innerHTML='<div style="font-size:12.5px;opacity:.6;margin-bottom:12px">Открытие нового блюда: <b style="color:#ffd166">10 000 ₽</b></div>';
-  DISHES.forEach(d=>{
-    const [id,name,price,cost,time]=d;
-    const unlocked=state.unlocked.includes(id);
-    const row=document.createElement('div');
-    row.className='dishRow'+(unlocked?'':' locked');
-    row.innerHTML=`
-      <div class="info">
-        <div>${unlocked?'✓':'🔒'} <b>${name}</b></div>
-        <div class="c">Ингредиенты ${cost} ₽ · ${time} сек</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <div class="p">${price} ₽</div>
-        ${unlocked?'<button class="unlocked">открыто</button>':'<button class="unlock" data-id="'+id+'">10 000 ₽</button>'}
-      </div>`;
-    pbody.appendChild(row);
+  ptit.textContent='📖 Меню ресторана';
+  pb.innerHTML='<div style="font-size:12px;opacity:.6;margin-bottom:10px">Открытие нового блюда: <b style="color:#ffd166">10 000 ₽</b> · Всего блюд: '+DISHES.length+'</div>';
+  DISHES.forEach(function(d){
+    var unlocked=state.unlockedDishes.indexOf(d.id)>=0;
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:10px;margin-bottom:5px;font-size:13px'+(unlocked?'':';opacity:.55');
+    row.innerHTML='<div style="display:flex;flex-direction:column;gap:2px">'+
+      '<div>'+(unlocked?'✓':'🔒')+' <b>'+d.emoji+' '+d.name+'</b></div>'+
+      '<div style="font-size:11px;opacity:.6">Ингредиенты '+d.cost+' ₽ · '+d.time+' сек</div>'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;align-items:center">'+
+      '<div style="color:#95d5b2;font-weight:700">'+d.price+' ₽</div>'+
+      (unlocked?'':'<button data-id="'+d.id+'" style="padding:6px 12px;border-radius:8px;border:0;cursor:pointer;font-size:11.5px;font-weight:700;font-family:inherit;background:linear-gradient(135deg,#e85a3a,#a03a20);color:#fff">10 000 ₽</button>')+
+      '</div>';
+    pb.appendChild(row);
   });
-  pbody.querySelectorAll('.unlock').forEach(b=>{
-    b.onclick=()=>{
+  pb.querySelectorAll('[data-id]').forEach(function(b){
+    b.onclick=function(){
       if(state.money<10000){toast('Не хватает 10 000 ₽');return}
       state.money-=10000;
-      state.unlocked.push(b.dataset.id);
-      updateHUD();save();
+      state.unlockedDishes.push(b.dataset.id);
+      updateHUD();save();openMenu();
       toast('🎉 Блюдо открыто!');
-      openMenu();
     };
   });
   panel.classList.add('on');
 }
 
-function openCookMenu(item){
-  ptitle.textContent='🔥 Плита';
-  pbody.innerHTML='<div style="font-size:12.5px;opacity:.6;margin-bottom:12px">Выбери блюдо (оплачиваешь ингредиенты).</div>';
-  state.unlocked.forEach(id=>{
-    const d=DISH[id];if(!d)return;
-    const row=document.createElement('div');
-    row.className='dishRow';
-    row.innerHTML=`
-      <div class="info"><b>${d.name}</b><div class="c">Ингредиенты ${d.cost} ₽ · ${d.time} сек</div></div>
-      <div style="display:flex;gap:8px;align-items:center"><div class="p">${d.price} ₽</div><button class="unlock">Готовить</button></div>`;
-    row.querySelector('button').onclick=()=>{
-      startCooking(item,id);
-      panel.classList.remove('on');
+function openCookMenu(it){
+  ptit.textContent='🔥 Плита';
+  pb.innerHTML='<div style="font-size:12px;opacity:.6;margin-bottom:10px">Выбери блюдо. Готовое появится в складе сверху.</div>';
+  state.unlockedDishes.forEach(function(id){
+    var d=DM[id];if(!d)return;
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:10px;margin-bottom:5px;font-size:13px';
+    row.innerHTML='<div style="display:flex;flex-direction:column;gap:2px">'+
+      '<div><b>'+d.emoji+' '+d.name+'</b></div>'+
+      '<div style="font-size:11px;opacity:.6">Ингредиенты '+d.cost+' ₽ · '+d.time+' сек</div>'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;align-items:center">'+
+      '<div style="color:#95d5b2;font-weight:700">'+d.price+' ₽</div>'+
+      '<button data-id="'+id+'" style="padding:6px 12px;border-radius:8px;border:0;cursor:pointer;font-size:11.5px;font-weight:700;font-family:inherit;background:linear-gradient(135deg,#52b788,#2d6a4f);color:#fff">Готовить</button>'+
+      '</div>';
+    pb.appendChild(row);
+  });
+  pb.querySelectorAll('[data-id]').forEach(function(b){
+    b.onclick=function(){
+      startCooking(it,b.dataset.id);
+      closePanel();
     };
-    pbody.appendChild(row);
   });
   panel.classList.add('on');
 }
 
-/* ==========================================================
-   СТАРТ
-   ========================================================== */
-window.addEventListener('resize',()=>{
-  camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight,false);
-});
-
-load();
-if(!state.placed.length){
-  // стартовый набор
-  placeItem('stove',4,3,true);
-  placeItem('counter',6,3,true);
-  placeItem('register',3,8,true);
-  placeItem('table4',8,7,true);
-  placeItem('table2',10,4,true);
-  placeItem('plant',2,2,true);
-  placeItem('plant',13,9,true);
-  save();
+function openUpgrades(){
+  ptit.textContent='⬆️ Улучшения';
+  pb.innerHTML='<div class="grid" id="gr"></div>';
+  var g=$('gr');
+  UPGRADES.forEach(function(u){
+    var lvl=state.upgrades[u.id]||0;
+    var maxed=lvl>=u.max;
+    var cost=u.cost*(lvl+1);
+    var c=document.createElement('div');
+    c.className='card'+(maxed||state.money<cost?' dis':'');
+    c.innerHTML='<div class="emoji">'+u.icon+'</div><div class="nm">'+u.name+'</div><div class="sub">'+u.desc+'</div>'+
+      '<div class="cost">'+(maxed?'МАКС':(cost.toLocaleString('ru-RU')+' ₽ · ур.'+(lvl+1)+'/'+u.max))+'</div>';
+    c.onclick=function(){
+      if(maxed){toast('Уже максимум');return}
+      if(state.money<cost){toast('Не хватает');return}
+      state.money-=cost;
+      state.upgrades[u.id]=lvl+1;
+      applyUpgrade(u.id,lvl+1);
+      updateHUD();save();openUpgrades();
+      toast('✨ '+u.name+' ур.'+(lvl+1));
+    };
+    g.appendChild(c);
+  });
+  panel.classList.add('on');
 }
 
-// спавним первого гостя для демонстрации
-setTimeout(spawnCustomer,1200);
-setTimeout(spawnCustomer,2500);
+function applyUpgrade(id,lvl){
+  if(id==='expand_w'){
+    var newW=16+4*lvl;
+    for(var f=0;f<2;f++){
+      if(!state.grids[f])continue;
+      for(var y=0;y<state.gridH;y++){
+        for(var x=state.gridW;x<newW;x++){
+          state.grids[f][y][x]=null;
+        }
+      }
+    }
+    state.gridW=newW;
+  }
+  if(id==='expand_h'){
+    var newH=12+4*lvl;
+    for(var f2=0;f2<2;f2++){
+      if(!state.grids[f2])continue;
+      while(state.grids[f2].length<newH){
+        var row=[];
+        for(var x2=0;x2<state.gridW;x2++)row.push(null);
+        state.grids[f2].push(row);
+      }
+    }
+    state.gridH=newH;
+  }
+  if(id==='floor2'){
+    ensureFloors();
+    $('bFloor').textContent='🏢 Этаж 1';
+    $('bFloor').style.display='flex';
+  }
+}
 
-document.getElementById('loading').style.display='none';
-updateHUD();
-requestAnimationFrame(loop);
+function openHelp(){
+  ptit.textContent='❓ Как играть';
+  pb.innerHTML='<div style="font-size:13px;line-height:1.7">'+
+    '<p><b>🎯 Цель:</b> построй прибыльный ресторан.</p>'+
+    '<p style="margin-top:10px"><b>🛒 Магазин</b> — покупай столы, плиты, кассу и декор. После выбора тапни на пустую клетку.</p>'+
+    '<p style="margin-top:10px"><b>📖 Меню</b> — открывай новые блюда за 10 000 ₽. Чем дороже блюдо, тем больше выручка.</p>'+
+    '<p style="margin-top:10px"><b>🔥 Плита</b> — тапни, выбери блюдо. Готовое падает в склад сверху.</p>'+
+    '<p style="margin-top:10px"><b>👥 Гости</b> — подходят, садятся, показывают в облачке желаемое блюдо. Тапни по гостю, если его блюдо есть в складе — он ест и платит + чаевые.</p>'+
+    '<p style="margin-top:10px"><b>⭐ Репутация</b> падает, когда гости уходят без еды.</p>'+
+    '<p style="margin-top:10px"><b>⬆️ Улучшения</b>: оплата картой (+50% выручки), доставка (пассивный доход), быстрая готовка, расширение, второй этаж, официанты, реклама, уборщики.</p>'+
+    '<p style="margin-top:10px;opacity:.6"><b>Управление:</b> тап по плите/гостю — действие. Драг — двигать камеру. Пинч — зум. Двойной клик по мебели — убрать за 50% цены.</p>'+
+    '</div>';
+  panel.classList.add('on');
+}
 
-// автосохранение раз в 10 секунд
-setInterval(save,10000);
+/* ============ BOOT ============ */
+function boot(){
+  ensureFloors();
+  var loaded=load();
+  if(!loaded){
+    // Стартовый набор
+    placeItem('stove',4,3,0,true);
+    placeItem('counter',6,3,0,true);
+    placeItem('register',3,8,0,true);
+    placeItem('table4',8,7,0,true);
+    placeItem('table2',10,4,0,true);
+    placeItem('plant',2,2,0,true);
+    placeItem('plant',13,9,0,true);
+  }
+  state.cam.x=state.gridW/2;
+  state.cam.y=state.gridH/2;
+  updateHUD();
+  updateStorageUI();
+  $('bFloor').textContent='🏢 Этаж '+(state.floor+1);
+  if(!state.upgrades.floor2)$('bFloor').style.display='none';
+  setInterval(save,12000);
+  window.addEventListener('beforeunload',save);
+  requestAnimationFrame(loop);
+}
+
+boot();
 
 })();
 </script>
