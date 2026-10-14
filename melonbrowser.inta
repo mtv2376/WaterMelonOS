@@ -1,0 +1,831 @@
+inta.stg:{namer,icon,background
+namer:app.name:["MelonBrowser"],what.name=namer
+icon:app.ico:["🌐"],what.ico=icon
+background:app.bg:[#0a1710],what.ico.bg=background
+}
+IL.cfg={scripts:all}
+Inta.cfg={pc,tablet,phone}
+load.stop_parse.inta
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MelonBrowser</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;background:#0a1710;color:#fff0f3;overflow:hidden}
+  ::-webkit-scrollbar{display:none;width:0;height:0}
+  *{scrollbar-width:none}
+
+  .app{display:flex;flex-direction:column;height:100%}
+
+  /* toolbar */
+  .toolbar{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 10px;
+    background:rgba(0,0,0,.35);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    flex-shrink:0;
+  }
+  .tb-btn{
+    width:34px;height:34px;
+    border-radius:9px;border:0;cursor:pointer;
+    background:rgba(255,255,255,.06);
+    color:#fff0f3;font-size:15px;line-height:1;
+    display:grid;place-items:center;flex-shrink:0;
+    transition:.15s;
+  }
+  .tb-btn:hover{background:rgba(255,255,255,.15)}
+  .tb-btn:active{transform:scale(.94)}
+  .tb-btn:disabled{opacity:.3;cursor:default}
+  .tb-btn:disabled:hover{background:rgba(255,255,255,.06)}
+  .tb-btn.star-on{color:#ffd166}
+
+  .addr-wrap{
+    flex:1;
+    display:flex;align-items:center;gap:4px;
+    background:rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:11px;
+    padding:0 4px 0 12px;
+    min-width:0;
+    transition:.15s;
+  }
+  .addr-wrap:focus-within{border-color:#ff4d6d;background:rgba(0,0,0,.5)}
+  .addr-ico{font-size:13px;opacity:.5;flex-shrink:0}
+  .addr{
+    flex:1;
+    background:transparent;border:0;outline:0;
+    color:#fff0f3;font-family:inherit;font-size:13.5px;
+    padding:9px 0;min-width:0;
+  }
+  .addr::placeholder{opacity:.4}
+
+  /* progress bar */
+  .progress{
+    height:2px;width:0;
+    background:linear-gradient(90deg,#ff4d6d,#ff8fa3);
+    transition:width .2s ease, opacity .3s ease;
+    opacity:0;
+    flex-shrink:0;
+  }
+  .progress.on{opacity:1}
+
+  /* viewport */
+  .viewport{
+    flex:1;
+    position:relative;
+    background:#fff;
+    overflow:hidden;
+    min-height:0;
+  }
+  #frame{
+    width:100%;height:100%;border:0;display:block;background:#fff;
+  }
+  #frame.hidden{display:none}
+
+  /* start page */
+  .start{
+    position:absolute;inset:0;
+    overflow-y:auto;
+    padding:40px 20px 60px;
+    background:
+      radial-gradient(circle at 80% 10%,rgba(255,77,109,.18),transparent 45%),
+      radial-gradient(circle at 10% 90%,rgba(149,213,178,.12),transparent 45%),
+      linear-gradient(160deg,#12291f,#0a1710);
+    display:none;
+  }
+  .start.on{display:block}
+  .start-inner{max-width:640px;margin:0 auto;text-align:center}
+  .logo{font-size:30px;font-weight:700;margin-bottom:26px;letter-spacing:-.01em}
+  .logo span{color:#ff4d6d}
+
+  .start-search{display:flex;gap:8px;margin-bottom:32px}
+  .start-search input{
+    flex:1;
+    padding:14px 18px;
+    border-radius:14px;
+    background:rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.14);
+    color:#fff0f3;font-family:inherit;font-size:15px;
+    outline:0;transition:.15s;
+  }
+  .start-search input:focus{border-color:#ff4d6d}
+  .start-search button{
+    padding:0 22px;border-radius:14px;border:0;cursor:pointer;
+    background:linear-gradient(135deg,#ff4d6d,#c9184a);
+    color:#fff;font-family:inherit;font-size:14px;font-weight:600;
+    transition:.15s;
+  }
+  .start-search button:hover{filter:brightness(1.1)}
+
+  .sec{margin-bottom:28px;text-align:left}
+  .sec-title{
+    font-size:11px;text-transform:uppercase;letter-spacing:1.2px;
+    opacity:.5;font-weight:600;margin-bottom:10px;text-align:center;
+  }
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+  .tile{
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:14px;padding:16px 12px;cursor:pointer;
+    color:#fff0f3;font-family:inherit;
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    transition:.15s;text-align:center;
+  }
+  .tile:hover{background:rgba(255,77,109,.14);border-color:#ff4d6d;transform:translateY(-2px)}
+  .tile .e{font-size:26px;line-height:1}
+  .tile .n{font-size:12.5px;line-height:1.3;word-break:break-word}
+
+  /* error page */
+  .error{
+    position:absolute;inset:0;
+    display:none;
+    align-items:center;justify-content:center;
+    padding:30px;
+    background:linear-gradient(160deg,#12291f,#0a1710);
+  }
+  .error.on{display:flex}
+  .error-card{
+    max-width:480px;text-align:center;
+    background:rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:18px;padding:32px 26px;
+  }
+  .error-card .e{font-size:52px;line-height:1;margin-bottom:16px}
+  .error-card h2{font-size:19px;margin-bottom:10px;font-weight:600}
+  .error-card p{font-size:13.5px;line-height:1.6;opacity:.7;margin-bottom:20px;word-break:break-word}
+  .error-card .url{
+    font-family:ui-monospace,Consolas,monospace;font-size:11.5px;
+    opacity:.5;background:rgba(0,0,0,.35);padding:6px 10px;
+    border-radius:7px;margin-bottom:20px;word-break:break-all;
+  }
+  .error-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .error-actions button{
+    padding:10px 18px;border-radius:10px;
+    border:1px solid rgba(255,255,255,.16);
+    background:rgba(255,255,255,.06);color:#fff0f3;
+    font-family:inherit;font-size:13px;cursor:pointer;
+    transition:.15s;
+  }
+  .error-actions button:hover{background:rgba(255,255,255,.14)}
+  .error-actions button.primary{
+    background:linear-gradient(135deg,#ff4d6d,#c9184a);
+    border-color:transparent;font-weight:600;
+  }
+
+  /* status */
+  .status{
+    height:24px;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 14px;
+    background:rgba(0,0,0,.4);
+    border-top:1px solid rgba(255,255,255,.06);
+    font-size:11px;opacity:.7;
+    color:#fff0f3;
+    flex-shrink:0;
+    gap:10px;
+  }
+  .status .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .status .r{opacity:.6;flex-shrink:0}
+
+  /* dropdown */
+  .dropdown{
+    position:absolute;top:54px;right:10px;
+    width:320px;max-height:70%;
+    overflow-y:auto;
+    background:rgba(12,25,18,.97);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;
+    box-shadow:0 20px 50px rgba(0,0,0,.6);
+    padding:8px;z-index:30;
+    display:none;
+  }
+  .dropdown.on{display:block;animation:ddIn .18s ease}
+  @keyframes ddIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  .dd-sec{margin-bottom:6px}
+  .dd-sec:last-child{margin-bottom:0}
+  .dd-t{
+    font-size:10.5px;text-transform:uppercase;letter-spacing:1.1px;
+    opacity:.45;padding:8px 10px 6px;font-weight:600;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .dd-t button{
+    background:transparent;border:0;color:#ff8fa3;cursor:pointer;
+    font-family:inherit;font-size:10.5px;text-transform:none;letter-spacing:0;
+    padding:2px 6px;border-radius:6px;
+  }
+  .dd-t button:hover{background:rgba(255,255,255,.08)}
+  .dd-list{display:flex;flex-direction:column;gap:2px}
+  .dd-item{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 10px;border-radius:9px;cursor:pointer;
+    background:transparent;border:0;color:#fff0f3;font-family:inherit;
+    font-size:12.5px;text-align:left;width:100%;transition:.12s;
+    min-width:0;
+  }
+  .dd-item:hover{background:rgba(255,255,255,.08)}
+  .dd-item .e{font-size:14px;flex-shrink:0}
+  .dd-item .u{
+    flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    opacity:.85;min-width:0;
+  }
+  .dd-item .del{
+    flex-shrink:0;opacity:0;transition:.15s;padding:2px 6px;
+    border-radius:6px;background:transparent;border:0;color:#ffb3c1;cursor:pointer;
+    font-family:inherit;font-size:13px;line-height:1;
+  }
+  .dd-item:hover .del{opacity:.75}
+  .dd-item .del:hover{opacity:1;background:rgba(255,77,109,.2)}
+  .dd-empty{font-size:12px;opacity:.4;padding:10px;text-align:center}
+
+  body[data-mobile="1"] .toolbar{padding:6px}
+  body[data-mobile="1"] .tb-btn{width:30px;height:30px;font-size:13px}
+  body[data-mobile="1"] .addr{font-size:12.5px;padding:8px 0}
+  body[data-mobile="1"] .dropdown{width:calc(100% - 20px);right:10px}
+  body[data-mobile="1"] .start{padding:24px 14px 40px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="toolbar">
+    <button class="tb-btn" id="backBtn" title="Назад">◀</button>
+    <button class="tb-btn" id="fwdBtn" title="Вперёд">▶</button>
+    <button class="tb-btn" id="reloadBtn" title="Обновить">⟳</button>
+    <button class="tb-btn" id="homeBtn" title="Домой">🏠</button>
+    <div class="addr-wrap">
+      <span class="addr-ico" id="addrIco">🔍</span>
+      <input class="addr" id="addr" placeholder="Адрес или поисковый запрос" spellcheck="false" autocomplete="off">
+    </div>
+    <button class="tb-btn" id="starBtn" title="В закладки">☆</button>
+    <button class="tb-btn" id="menuBtn" title="Меню">⋯</button>
+  </div>
+  <div class="progress" id="progress"></div>
+
+  <div class="viewport">
+    <div class="start on" id="start">
+      <div class="start-inner">
+        <div class="logo">🌐 Melon<span>Browser</span></div>
+        <div class="start-search">
+          <input id="startInput" placeholder="Поиск в DuckDuckGo Lite или адрес сайта…" autocomplete="off">
+          <button id="startGo">Найти</button>
+        </div>
+
+        <div class="sec">
+          <div class="sec-title">Быстрые ссылки</div>
+          <div class="tiles" id="quickTiles"></div>
+        </div>
+
+        <div class="sec" id="bookmarksSec" style="display:none">
+          <div class="sec-title">Закладки</div>
+          <div class="tiles" id="bookmarkTiles"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="error" id="error">
+      <div class="error-card">
+        <div class="e" id="errIcon">⚠️</div>
+        <h2 id="errTitle">Не удалось загрузить</h2>
+        <p id="errText">Что-то пошло не так</p>
+        <div class="url" id="errUrl"></div>
+        <div class="error-actions">
+          <button class="primary" id="errRetry">⟳ Попробовать снова</button>
+          <button id="errExternal">↗ Открыть в новой вкладке</button>
+          <button id="errHome">🏠 На главную</button>
+        </div>
+      </div>
+    </div>
+
+    <iframe id="frame" class="hidden"
+      sandbox="allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-downloads">
+    </iframe>
+  </div>
+
+  <div class="status">
+    <div class="l" id="statusUrl">готово</div>
+    <div class="r" id="statusText">—</div>
+  </div>
+</div>
+
+<div class="dropdown" id="dropdown">
+  <div class="dd-sec">
+    <div class="dd-t">Закладки</div>
+    <div class="dd-list" id="ddBookmarks"></div>
+  </div>
+  <div class="dd-sec">
+    <div class="dd-t">История <button id="clearHist">очистить</button></div>
+    <div class="dd-list" id="ddHistory"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+
+  /* ============ storage ============ */
+  const memStore = {};
+  const Store = {
+    get(k) {
+      try { return localStorage.getItem(k); }
+      catch { return memStore[k] ?? null; }
+    },
+    set(k, v) {
+      try { localStorage.setItem(k, v); }
+      catch { memStore[k] = String(v); }
+    }
+  };
+
+  const HIST_KEY = 'wmos:melonbr:history';
+  const BM_KEY   = 'wmos:melonbr:bookmarks';
+
+  /* ============ proxies ============ */
+  const PROXIES = [
+    { name: 'AllOrigins', build: u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u) },
+    { name: 'CodeTabs',   build: u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u) },
+    { name: 'CorsProxy',  build: u => 'https://corsproxy.io/?' + encodeURIComponent(u) },
+  ];
+
+  /* ============ state ============ */
+  let history   = [];
+  let pos       = -1;
+  let currentUrl = '';
+  let bookmarks = [];
+  try { history = JSON.parse(Store.get(HIST_KEY) || '[]') || []; } catch { history = []; }
+  try { bookmarks = JSON.parse(Store.get(BM_KEY) || '[]') || []; } catch { bookmarks = []; }
+  let currentRenderToken = 0;
+
+  const frame   = $('frame');
+  const startEl = $('start');
+  const errorEl = $('error');
+  const addr    = $('addr');
+  const progress= $('progress');
+
+  /* ============ utils ============ */
+  const isMobile = window.innerWidth < 700;
+  if (isMobile) document.body.dataset.mobile = '1';
+
+  function persist() {
+    Store.set(HIST_KEY, JSON.stringify(history.slice(-200)));
+    Store.set(BM_KEY, JSON.stringify(bookmarks));
+  }
+
+  function normalizeInput(v) {
+    v = String(v || '').trim();
+    if (!v) return '';
+    if (v === 'about:home') return 'about:home';
+    if (/^https?:\/\//i.test(v)) return v;
+    if (/^about:/i.test(v)) return 'about:home';
+    // похоже на домен?
+    if (!/\s/.test(v) && /^[\w-]+(\.[\w-]+)+(\/|$|\?|#)/.test(v)) return 'https://' + v;
+    if (!/\s/.test(v) && /^[\w-]+\.[a-z]{2,}$/i.test(v)) return 'https://' + v;
+    // иначе — поиск
+    return 'https://lite.duckduckgo.com/lite/?q=' + encodeURIComponent(v);
+  }
+
+  function hostOf(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ''); }
+    catch { return url; }
+  }
+
+  function setStatus(url, text) {
+    $('statusUrl').textContent = url || 'готово';
+    $('statusText').textContent = text || '—';
+  }
+
+  function showProgress(on) {
+    if (on) {
+      progress.classList.add('on');
+      progress.style.width = '15%';
+      setTimeout(() => progress.style.width = '70%', 200);
+    } else {
+      progress.style.width = '100%';
+      setTimeout(() => {
+        progress.classList.remove('on');
+        progress.style.width = '0';
+      }, 300);
+    }
+  }
+
+  /* ============ proxy fetch ============ */
+  async function fetchThroughProxy(url) {
+    let lastErr = null;
+    for (const p of PROXIES) {
+      try {
+        const ctl = new AbortController();
+        const timer = setTimeout(() => ctl.abort(), 20000);
+        const res = await fetch(p.build(url), { signal: ctl.signal });
+        clearTimeout(timer);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const text = await res.text();
+        return { text, via: p.name };
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+    throw lastErr || new Error('Все прокси недоступны');
+  }
+
+  /* ============ rewrite HTML ============ */
+  function rewriteHtml(html, baseUrl) {
+    let doc;
+    try { doc = new DOMParser().parseFromString(html, 'text/html'); }
+    catch { return null; }
+
+    // Убираем CSP-мета (иначе наш injected script не выполнится)
+    doc.querySelectorAll('meta[http-equiv]').forEach(m => {
+      const eq = (m.getAttribute('http-equiv') || '').toLowerCase();
+      if (eq === 'content-security-policy' || eq === 'x-frame-options') m.remove();
+    });
+
+    const absol = (u) => {
+      if (u == null) return null;
+      u = String(u).trim();
+      if (!u) return null;
+      if (/^(https?:|data:|blob:|mailto:|tel:|javascript:|about:)/i.test(u)) return u;
+      if (u.startsWith('#')) return u;
+      try { return new URL(u, baseUrl).href; } catch { return u; }
+    };
+
+    // <a href> → абсолютный
+    doc.querySelectorAll('a[href]').forEach(el => {
+      const v = el.getAttribute('href');
+      const a = absol(v);
+      if (a && !a.startsWith('#')) el.setAttribute('href', a);
+    });
+
+    // src / data-src / poster
+    ['src','data-src','poster','data-original','data-lazy-src'].forEach(attr => {
+      doc.querySelectorAll('[' + attr + ']').forEach(el => {
+        const a = absol(el.getAttribute(attr));
+        if (a) el.setAttribute(attr, a);
+      });
+    });
+
+    // srcset
+    doc.querySelectorAll('[srcset]').forEach(el => {
+      const v = el.getAttribute('srcset') || '';
+      const parts = v.split(',').map(part => {
+        const [u, ...rest] = part.trim().split(/\s+/);
+        const a = absol(u);
+        return (a || u) + (rest.length ? ' ' + rest.join(' ') : '');
+      });
+      el.setAttribute('srcset', parts.join(', '));
+    });
+
+    // style url()
+    const rewriteStyle = (s) => String(s).replace(/url\(\s*(['"]?)([^)'"]+)\1\s*\)/gi, (m, q, u) => {
+      const a = absol(u);
+      return a ? 'url("' + a + '")' : m;
+    });
+    doc.querySelectorAll('style').forEach(st => { st.textContent = rewriteStyle(st.textContent); });
+    doc.querySelectorAll('[style]').forEach(el => { el.setAttribute('style', rewriteStyle(el.getAttribute('style'))); });
+
+    // Перехватчик кликов и форм
+    const interceptor = doc.createElement('script');
+    interceptor.textContent = `
+      (function(){
+        try {
+          document.addEventListener('click', function(e){
+            if (!e.target || !e.target.closest) return;
+            var a = e.target.closest('a');
+            if (!a) return;
+            var href = a.href;
+            if (!href) return;
+            if (/^(javascript:|mailto:|tel:|about:)/i.test(href)) return;
+            // same-page anchor
+            var base = location.href.split('#')[0];
+            var target = href.split('#')[0];
+            if (target === base && href.indexOf('#') !== -1) return;
+            e.preventDefault();
+            try { parent.postMessage({ type:'melon:navigate', url: href }, '*'); } catch(_){}
+          }, true);
+
+          document.addEventListener('submit', function(e){
+            var form = e.target;
+            var method = (form.method || 'get').toLowerCase();
+            if (method !== 'get') return;
+            var action = form.action || location.href;
+            try {
+              var qs = new URLSearchParams(new FormData(form)).toString();
+              var url = action + (action.indexOf('?') === -1 ? '?' : '&') + qs;
+              e.preventDefault();
+              parent.postMessage({ type:'melon:navigate', url: url }, '*');
+            } catch(_){}
+          }, true);
+
+          // Открываем target="_blank" как обычный переход
+          document.addEventListener('click', function(e){
+            if (!e.target || !e.target.closest) return;
+            var a = e.target.closest('a[target="_blank"]');
+            if (a) a.removeAttribute('target');
+          }, true);
+        } catch(_){}
+      })();
+    `;
+    (doc.head || doc.documentElement).appendChild(interceptor);
+
+    return '<!DOCTYPE html>' + doc.documentElement.outerHTML;
+  }
+
+  /* ============ view switching ============ */
+  function showStart() {
+    startEl.classList.add('on');
+    errorEl.classList.remove('on');
+    frame.classList.add('hidden');
+    addr.value = '';
+    addr.placeholder = 'Адрес или поисковый запрос';
+    $('addrIco').textContent = '🔍';
+    setStatus('', 'готовая страница');
+    renderBookmarksOnStart();
+  }
+  function showError(icon, title, text, url) {
+    startEl.classList.remove('on');
+    errorEl.classList.add('on');
+    frame.classList.add('hidden');
+    $('errIcon').textContent = icon;
+    $('errTitle').textContent = title;
+    $('errText').textContent = text;
+    $('errUrl').textContent = url || '';
+  }
+  function showFrame() {
+    startEl.classList.remove('on');
+    errorEl.classList.remove('on');
+    frame.classList.remove('hidden');
+  }
+
+  /* ============ navigation ============ */
+  async function navigate(input, opts = {}) {
+    const url = normalizeInput(input);
+    if (!url) return;
+
+    if (url === 'about:home') {
+      if (opts.push !== false) {
+        history = history.slice(0, pos + 1);
+        history.push({ url: 'about:home', t: Date.now() });
+        pos = history.length - 1;
+        persist();
+      }
+      currentUrl = 'about:home';
+      updateNavButtons();
+      showStart();
+      return;
+    }
+
+    if (opts.push !== false) {
+      history = history.slice(0, pos + 1);
+      history.push({ url, t: Date.now() });
+      pos = history.length - 1;
+      persist();
+    }
+
+    currentUrl = url;
+    addr.value = url;
+    $('addrIco').textContent = url.startsWith('https://') ? '🔒' : '🔓';
+    updateNavButtons();
+    updateStar();
+
+    const token = ++currentRenderToken;
+    showProgress(true);
+    setStatus(url, 'загрузка…');
+    showFrame();
+    frame.srcdoc = '<!DOCTYPE html><html><body style="margin:0;background:#fff;color:#333;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh"><div style="text-align:center;opacity:.5"><div style="font-size:32px">🌐</div><div style="margin-top:10px">загрузка…</div></div></body></html>';
+
+    try {
+      const { text, via } = await fetchThroughProxy(url);
+      if (token !== currentRenderToken) return;
+
+      // Проверяем: не пустой ли ответ
+      if (!text || text.length < 20) {
+        throw new Error('Пустой ответ от прокси');
+      }
+
+      const rewritten = rewriteHtml(text, url);
+      if (!rewritten) throw new Error('Не удалось обработать HTML');
+
+      frame.srcdoc = rewritten;
+      setStatus(url, 'готово • через ' + via);
+      showProgress(false);
+    } catch (e) {
+      if (token !== currentRenderToken) return;
+      showProgress(false);
+      showError(
+        '⚠️',
+        'Не удалось загрузить',
+        'Сайт не отвечает, или все CORS-прокси недоступны. ' + (e.message || ''),
+        url
+      );
+      setStatus(url, 'ошибка');
+    }
+  }
+
+  function goBack() {
+    if (pos <= 0) return;
+    pos--;
+    const item = history[pos];
+    navigate(item.url, { push: false });
+  }
+  function goForward() {
+    if (pos >= history.length - 1) return;
+    pos++;
+    const item = history[pos];
+    navigate(item.url, { push: false });
+  }
+  function reload() {
+    if (!currentUrl) return;
+    navigate(currentUrl, { push: false });
+  }
+  function goHome() {
+    navigate('about:home');
+  }
+  function updateNavButtons() {
+    $('backBtn').disabled = pos <= 0;
+    $('fwdBtn').disabled  = pos >= history.length - 1;
+  }
+
+  /* ============ bookmarks ============ */
+  function updateStar() {
+    const isBm = bookmarks.some(b => b.url === currentUrl);
+    $('starBtn').textContent = isBm ? '★' : '☆';
+    $('starBtn').classList.toggle('star-on', isBm);
+  }
+  function toggleBookmark() {
+    if (!currentUrl || currentUrl === 'about:home') return;
+    const idx = bookmarks.findIndex(b => b.url === currentUrl);
+    if (idx >= 0) bookmarks.splice(idx, 1);
+    else bookmarks.unshift({ url: currentUrl, t: Date.now() });
+    persist();
+    updateStar();
+    renderDropdown();
+    renderBookmarksOnStart();
+  }
+
+  /* ============ start page ============ */
+  const QUICK = [
+    { e: '📚', n: 'Wikipedia',   u: 'https://ru.wikipedia.org/' },
+    { e: '💻', n: 'MDN',         u: 'https://developer.mozilla.org/ru/' },
+    { e: '🦆', n: 'DuckDuckGo',  u: 'https://lite.duckduckgo.com/lite/' },
+    { e: '📰', n: 'Hacker News', u: 'https://news.ycombinator.com/' },
+    { e: '🗄️', n: 'Archive.org', u: 'https://archive.org/' },
+    { e: '🌐', n: 'Example',     u: 'https://example.com/' },
+  ];
+
+  function renderQuickTiles() {
+    $('quickTiles').innerHTML = QUICK.map(q =>
+      `<button class="tile" data-url="${q.u}">
+        <span class="e">${q.e}</span>
+        <span class="n">${q.n}</span>
+      </button>`
+    ).join('');
+  }
+  function renderBookmarksOnStart() {
+    const sec = $('bookmarksSec'), grid = $('bookmarkTiles');
+    if (!bookmarks.length) { sec.style.display = 'none'; return; }
+    sec.style.display = 'block';
+    grid.innerHTML = bookmarks.slice(0, 12).map(b => `
+      <button class="tile" data-url="${b.url}">
+        <span class="e">⭐</span>
+        <span class="n">${hostOf(b.url)}</span>
+      </button>
+    `).join('');
+  }
+  $('quickTiles').addEventListener('click', e => {
+    const t = e.target.closest('[data-url]'); if (!t) return;
+    navigate(t.dataset.url);
+  });
+  $('bookmarkTiles').addEventListener('click', e => {
+    const t = e.target.closest('[data-url]'); if (!t) return;
+    navigate(t.dataset.url);
+  });
+  $('startGo').addEventListener('click', () => {
+    const v = $('startInput').value.trim();
+    if (v) navigate(v);
+  });
+  $('startInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); $('startGo').click(); }
+  });
+
+  /* ============ dropdown ============ */
+  function renderDropdown() {
+    const bmEl = $('ddBookmarks');
+    bmEl.innerHTML = bookmarks.length
+      ? bookmarks.map((b, i) => `
+          <button class="dd-item" data-url="${b.url}">
+            <span class="e">⭐</span>
+            <span class="u">${hostOf(b.url)}</span>
+            <span class="del" data-db="${i}" title="Удалить">✕</span>
+          </button>`).join('')
+      : '<div class="dd-empty">пусто</div>';
+
+    const recent = history.slice().reverse().slice(0, 30);
+    const hEl = $('ddHistory');
+    hEl.innerHTML = recent.length
+      ? recent.map(h => `
+          <button class="dd-item" data-url="${h.url}">
+            <span class="e">🕘</span>
+            <span class="u">${h.url === 'about:home' ? 'Начальная страница' : hostOf(h.url)}</span>
+          </button>`).join('')
+      : '<div class="dd-empty">пусто</div>';
+  }
+
+  $('dropdown').addEventListener('click', e => {
+    const del = e.target.closest('[data-db]');
+    if (del) {
+      e.stopPropagation();
+      bookmarks.splice(+del.dataset.db, 1);
+      persist();
+      updateStar();
+      renderDropdown();
+      renderBookmarksOnStart();
+      return;
+    }
+    const item = e.target.closest('[data-url]');
+    if (item) {
+      $('dropdown').classList.remove('on');
+      navigate(item.dataset.url);
+    }
+  });
+  $('clearHist').addEventListener('click', e => {
+    e.stopPropagation();
+    if (!confirm('Очистить историю?')) return;
+    history = [];
+    pos = -1;
+    persist();
+    updateNavButtons();
+    renderDropdown();
+  });
+
+  /* ============ toolbar events ============ */
+  $('backBtn').addEventListener('click', goBack);
+  $('fwdBtn').addEventListener('click', goForward);
+  $('reloadBtn').addEventListener('click', reload);
+  $('homeBtn').addEventListener('click', goHome);
+  $('starBtn').addEventListener('click', toggleBookmark);
+  $('menuBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    const open = $('dropdown').classList.toggle('on');
+    if (open) renderDropdown();
+  });
+  document.addEventListener('click', e => {
+    if (!$('dropdown').contains(e.target) && !$('menuBtn').contains(e.target)) {
+      $('dropdown').classList.remove('on');
+    }
+  });
+
+  addr.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const v = addr.value.trim();
+      if (v) navigate(v);
+      addr.blur();
+    } else if (e.key === 'Escape') {
+      addr.value = currentUrl === 'about:home' ? '' : currentUrl;
+      addr.blur();
+    }
+  });
+  addr.addEventListener('focus', () => addr.select());
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && $('dropdown').classList.contains('on')) {
+      $('dropdown').classList.remove('on');
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+      e.preventDefault(); addr.focus();
+    }
+  });
+
+  /* ============ postMessage от iframe ============ */
+  window.addEventListener('message', e => {
+    if (!e.data || e.data.type !== 'melon:navigate') return;
+    const url = e.data.url;
+    if (url) navigate(url);
+  });
+
+  /* ============ error actions ============ */
+  $('errRetry').addEventListener('click', () => { if (currentUrl) navigate(currentUrl, { push: false }); });
+  $('errExternal').addEventListener('click', () => {
+    if (currentUrl) window.open(currentUrl, '_blank', 'noopener,noreferrer');
+  });
+  $('errHome').addEventListener('click', goHome);
+
+  /* ============ init ============ */
+  renderQuickTiles();
+  renderBookmarksOnStart();
+  renderDropdown();
+  updateNavButtons();
+  updateStar();
+  showStart();
+
+  // если есть история — показать последнюю страницу
+  if (history.length && history[history.length - 1].url !== 'about:home') {
+    pos = history.length - 1;
+    navigate(history[pos].url, { push: false });
+  }
+})();
+</script>
+</body>
+</html>
