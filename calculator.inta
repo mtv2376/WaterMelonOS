@@ -1,0 +1,483 @@
+inta.stg:{namer,icon,background
+namer:app.name:["Калькулятор"],what.name=namer
+icon:app.ico:["🧮"],what.ico=icon
+background:app.bg:[#0a1710],what.ico.bg=background
+}
+IL.cfg={scripts:all}
+Inta.cfg={pc,tablet,phone}
+load.stop_parse.inta
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Калькулятор</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;background:#0a1710;color:#fff0f3;overflow:hidden;user-select:none;-webkit-user-select:none}
+  ::-webkit-scrollbar{display:none;width:0;height:0}
+  *{scrollbar-width:none}
+
+  .app{display:flex;flex-direction:column;height:100%}
+
+  .display{
+    padding:20px 22px 18px;
+    background:rgba(0,0,0,.3);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    text-align:right;
+    flex-shrink:0;
+    position:relative;
+  }
+  .display .expr{
+    font-size:13px;
+    opacity:.4;
+    min-height:18px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+    margin-bottom:6px;
+  }
+  .display .val{
+    font-size:clamp(28px,6vw,48px);
+    font-weight:300;
+    font-variant-numeric:tabular-nums;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    line-height:1.1;
+    letter-spacing:-.01em;
+  }
+  .display .mem-badge{
+    position:absolute;
+    top:10px;left:14px;
+    font-size:10px;
+    opacity:.5;
+    background:rgba(255,255,255,.1);
+    padding:2px 7px;
+    border-radius:5px;
+    display:none;
+  }
+  .display .mem-badge.on{display:inline-block}
+
+  .pads{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    padding:10px;
+    gap:8px;
+    min-height:0;
+  }
+
+  .row{display:flex;gap:8px;flex:1}
+
+  button.k{
+    flex:1;
+    border:0;
+    border-radius:14px;
+    font-family:inherit;
+    font-size:clamp(16px,3.2vw,20px);
+    font-weight:500;
+    cursor:pointer;
+    background:rgba(255,255,255,.06);
+    color:#fff0f3;
+    transition:.08s;
+    display:grid;
+    place-items:center;
+    padding:0;
+    min-height:0;
+  }
+  button.k:hover{background:rgba(255,255,255,.13)}
+  button.k:active{transform:scale(.96);background:rgba(255,255,255,.18)}
+
+  button.k.fn{background:rgba(255,255,255,.1);color:#b3a3ff}
+  button.k.fn:hover{background:rgba(255,255,255,.18)}
+
+  button.k.op{background:linear-gradient(135deg,#ff4d6d,#c9184a);color:#fff;font-weight:600}
+  button.k.op:hover{filter:brightness(1.1)}
+
+  button.k.eq{background:linear-gradient(135deg,#52b788,#2d6a4f);color:#fff;font-weight:700}
+  button.k.eq:hover{filter:brightness(1.1)}
+
+  button.k.dng{background:rgba(201,24,74,.2);color:#ffb3c1}
+  button.k.dng:hover{background:rgba(201,24,74,.35)}
+
+  .tabs{
+    display:flex;
+    background:rgba(0,0,0,.3);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    flex-shrink:0;
+  }
+  .tab{
+    flex:1;
+    padding:11px;
+    background:transparent;
+    border:0;
+    color:#fff0f3;
+    font-family:inherit;
+    font-size:12.5px;
+    cursor:pointer;
+    opacity:.55;
+    transition:.15s;
+    border-bottom:2px solid transparent;
+  }
+  .tab:hover{opacity:.85;background:rgba(255,255,255,.04)}
+  .tab.on{opacity:1;border-bottom-color:#ff4d6d;font-weight:600}
+
+  .pane{display:none;flex:1;flex-direction:column;min-height:0}
+  .pane.on{display:flex}
+
+  .hist{
+    flex:1;
+    overflow-y:auto;
+    padding:14px 18px;
+  }
+  .hist-item{
+    padding:11px 13px;
+    background:rgba(255,255,255,.04);
+    border-radius:11px;
+    margin-bottom:7px;
+    cursor:pointer;
+    transition:.12s;
+    border:1px solid rgba(255,255,255,.06);
+  }
+  .hist-item:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.12)}
+  .hist-item .e{
+    font-size:11.5px;
+    opacity:.5;
+    font-variant-numeric:tabular-nums;
+    margin-bottom:3px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .hist-item .r{
+    font-size:16px;
+    font-weight:600;
+    font-variant-numeric:tabular-nums;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .hist-empty{
+    padding:50px 20px;
+    text-align:center;
+    opacity:.4;
+    font-size:12.5px;
+    line-height:1.6;
+  }
+  .hist-actions{
+    padding:10px 18px;
+    border-top:1px solid rgba(255,255,255,.08);
+    display:flex;
+    gap:8px;
+    flex-shrink:0;
+  }
+  .hist-actions button{
+    flex:1;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.16);
+    background:rgba(255,255,255,.06);
+    color:#fff0f3;
+    font-family:inherit;
+    font-size:12.5px;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .hist-actions button:hover{background:rgba(255,255,255,.14)}
+  .hist-actions button.danger{
+    background:rgba(201,24,74,.15);
+    border-color:rgba(255,77,109,.35);
+    color:#ffb3c1;
+  }
+  .hist-actions button.danger:hover{background:rgba(201,24,74,.3)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tabs">
+    <button class="tab on" data-tab="calc">Калькулятор</button>
+    <button class="tab" data-tab="hist">История</button>
+  </div>
+
+  <div class="pane on" data-pane="calc">
+    <div class="display">
+      <div class="mem-badge" id="mem">M</div>
+      <div class="expr" id="expr"></div>
+      <div class="val" id="val">0</div>
+    </div>
+    <div class="pads">
+      <div class="row">
+        <button class="k fn" data-act="mc" title="Memory clear">MC</button>
+        <button class="k fn" data-act="mr" title="Memory recall">MR</button>
+        <button class="k fn" data-act="m+" title="Memory add">M+</button>
+        <button class="k fn" data-act="m-" title="Memory sub">M−</button>
+      </div>
+      <div class="row">
+        <button class="k dng" data-act="clear">C</button>
+        <button class="k dng" data-act="ce">CE</button>
+        <button class="k fn" data-act="back">⌫</button>
+        <button class="k op" data-op="/">÷</button>
+      </div>
+      <div class="row">
+        <button class="k" data-num="7">7</button>
+        <button class="k" data-num="8">8</button>
+        <button class="k" data-num="9">9</button>
+        <button class="k op" data-op="*">×</button>
+      </div>
+      <div class="row">
+        <button class="k" data-num="4">4</button>
+        <button class="k" data-num="5">5</button>
+        <button class="k" data-num="6">6</button>
+        <button class="k op" data-op="-">−</button>
+      </div>
+      <div class="row">
+        <button class="k" data-num="1">1</button>
+        <button class="k" data-num="2">2</button>
+        <button class="k" data-num="3">3</button>
+        <button class="k op" data-op="+">+</button>
+      </div>
+      <div class="row">
+        <button class="k" data-act="sign">±</button>
+        <button class="k" data-num="0">0</button>
+        <button class="k" data-act="dot">.</button>
+        <button class="k eq" data-act="eq">=</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pane" data-pane="hist">
+    <div class="hist" id="hist"></div>
+    <div class="hist-actions">
+      <button id="copyHist">📋 Скопировать</button>
+      <button class="danger" id="clearHist">🗑 Очистить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+
+  const HIST_KEY = 'wmos:calculator:hist';
+  const MEM_KEY  = 'wmos:calculator:mem';
+
+  /* === Состояние === */
+  let current = '0';
+  let previous = null;
+  let op = null;
+  let justEvaluated = false;
+  let mem = Number(localStorage.getItem(MEM_KEY) || 0);
+  let hist = (() => { try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch { return []; } })();
+
+  const display = {
+    val: $('val'),
+    expr: $('expr'),
+    mem: $('mem')
+  };
+
+  function fmt(n) {
+    if (!isFinite(n)) return 'Деление на ноль';
+    const s = Math.abs(n) < 1e-10 ? '0' : String(n);
+    if (s.includes('e')) return s;
+    const [int, frac] = s.split('.');
+    const intF = Number(int).toLocaleString('ru-RU').replace(/,/g, ' ');
+    return frac ? intF + ',' + frac : intF;
+  }
+  function parseNumber(s) {
+    return Number(String(s).replace(/\s/g, '').replace(',', '.'));
+  }
+
+  function update() {
+    display.val.textContent = current.length > 16
+      ? current.slice(0, 16) + '…'
+      : current;
+    display.expr.textContent = previous != null && op != null
+      ? `${previous} ${opSym(op)}`
+      : '';
+    display.mem.classList.toggle('on', mem !== 0);
+  }
+  const opSym = o => ({'+':'+','-':'−','*':'×','/':'÷'}[o] || o);
+
+  function pushHistory(expr, result) {
+    hist.unshift({ expr, result, t: Date.now() });
+    if (hist.length > 100) hist.length = 100;
+    try { localStorage.setItem(HIST_KEY, JSON.stringify(hist)); } catch {}
+    renderHist();
+  }
+  function renderHist() {
+    const el = $('hist');
+    if (!hist.length) {
+      el.innerHTML = '<div class="hist-empty">Пока пусто<br>посчитай что-нибудь</div>';
+      return;
+    }
+    el.innerHTML = hist.map((h, i) => `
+      <div class="hist-item" data-idx="${i}">
+        <div class="e">${h.expr.replace(/</g,'&lt;')}</div>
+        <div class="r">= ${h.result.replace(/</g,'&lt;')}</div>
+      </div>
+    `).join('');
+  }
+  $('hist').addEventListener('click', e => {
+    const it = e.target.closest('[data-idx]'); if (!it) return;
+    const h = hist[+it.dataset.idx]; if (!h) return;
+    current = h.result;
+    justEvaluated = true;
+    update();
+    document.querySelector('[data-tab="calc"]').click();
+  });
+
+  $('clearHist').addEventListener('click', () => {
+    if (!hist.length) return;
+    if (!confirm('Очистить историю?')) return;
+    hist = [];
+    try { localStorage.setItem(HIST_KEY, '[]'); } catch {}
+    renderHist();
+  });
+  $('copyHist').addEventListener('click', async () => {
+    if (!hist.length) return;
+    const text = hist.map(h => `${h.expr} = ${h.result}`).join('\n');
+    try { await navigator.clipboard.writeText(text); } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); ta.remove();
+    }
+  });
+
+  /* === Действия === */
+  function inputNum(n) {
+    if (justEvaluated) { current = '0'; justEvaluated = false; previous = null; op = null; }
+    if (current === '0') current = n;
+    else if (current === '-0') current = '-' + n;
+    else if (current.length < 18) current += n;
+    update();
+  }
+  function inputDot() {
+    if (justEvaluated) { current = '0'; justEvaluated = false; previous = null; op = null; }
+    if (!current.includes('.')) current += '.';
+    update();
+  }
+  function applyOp(nextOp) {
+    const val = parseNumber(current);
+    if (previous != null && op != null && !justEvaluated) {
+      const r = calc(parseNumber(previous), val, op);
+      if (!isFinite(r)) { current = 'Деление на ноль'; update(); return; }
+      previous = fmt(r).replace(/\s/g,'');
+      current = previous;
+      pushHistory(`${previous} ${opSym(op)} ${fmt(val)}`, fmt(r));
+    } else {
+      previous = current;
+    }
+    op = nextOp;
+    justEvaluated = false;
+    current = '0';
+    // если оператор уже был и мы не считали — просто меняем
+    if (justEvaluated === false && op === nextOp) previous = current === '0' ? previous : current;
+    update();
+  }
+  function calc(a, b, o) {
+    switch (o) {
+      case '+': return a + b;
+      case '-': return a - b;
+      case '*': return a * b;
+      case '/': return b === 0 ? Infinity : a / b;
+    }
+    return b;
+  }
+  function equals() {
+    if (previous == null || op == null) {
+      pushHistory(current, current);
+      justEvaluated = true;
+      return;
+    }
+    const a = parseNumber(previous), b = parseNumber(current);
+    const r = calc(a, b, op);
+    const expr = `${fmt(a)} ${opSym(op)} ${fmt(b)}`;
+    if (!isFinite(r)) {
+      current = 'Деление на ноль';
+      previous = null; op = null;
+      update();
+      return;
+    }
+    current = fmt(r).replace(/\s/g,'');
+    pushHistory(expr, fmt(r));
+    previous = null;
+    op = null;
+    justEvaluated = true;
+    update();
+  }
+  function clearAll() {
+    current = '0'; previous = null; op = null; justEvaluated = false; update();
+  }
+  function clearEntry() {
+    current = '0'; justEvaluated = false; update();
+  }
+  function back() {
+    if (justEvaluated) { current = '0'; justEvaluated = false; update(); return; }
+    current = current.length > 1 ? current.slice(0, -1) : '0';
+    if (current === '-') current = '0';
+    update();
+  }
+  function sign() {
+    if (current === '0') return;
+    current = current.startsWith('-') ? current.slice(1) : '-' + current;
+    update();
+  }
+  function memSave(next) {
+    mem = next;
+    try { localStorage.setItem(MEM_KEY, String(mem)); } catch {}
+    update();
+  }
+
+  /* === Кнопки === */
+  document.querySelectorAll('.k').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const { num, op: o, act } = btn.dataset;
+      if (num != null) return inputNum(num);
+      if (o) return applyOp(o);
+      switch (act) {
+        case 'dot':   return inputDot();
+        case 'clear': return clearAll();
+        case 'ce':    return clearEntry();
+        case 'back':  return back();
+        case 'sign':  return sign();
+        case 'eq':    return equals();
+        case 'mc':    return memSave(0);
+        case 'mr':    current = fmt(mem).replace(/\s/g,''); justEvaluated = false; return update();
+        case 'm+':    return memSave(mem + parseNumber(current));
+        case 'm-':    return memSave(mem - parseNumber(current));
+      }
+    });
+  });
+
+  /* === Клавиатура === */
+  document.addEventListener('keydown', e => {
+    const k = e.key;
+    if (/^[0-9]$/.test(k)) { inputNum(k); e.preventDefault(); return; }
+    if (k === '.' || k === ',') { inputDot(); e.preventDefault(); return; }
+    if (k === '+' || k === '-' || k === '*' || k === '/') { applyOp(k); e.preventDefault(); return; }
+    if (k === 'Enter' || k === '=') { equals(); e.preventDefault(); return; }
+    if (k === 'Backspace') { back(); e.preventDefault(); return; }
+    if (k === 'Escape') { clearAll(); e.preventDefault(); return; }
+    if (k === 'Delete') { clearEntry(); e.preventDefault(); return; }
+  });
+
+  /* === Вкладки === */
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
+      document.querySelectorAll('.pane').forEach(p =>
+        p.classList.toggle('on', p.dataset.pane === t.dataset.tab));
+    });
+  });
+
+  update();
+  renderHist();
+  console.log('%c[Calculator]', 'color:#ff4d6d', 'готов');
+})();
+</script>
+</body>
+</html>
