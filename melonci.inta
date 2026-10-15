@@ -14,33 +14,31 @@ load.stop_parse.inta
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>MelonCI</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%;overflow:hidden;font-family:'SF Mono','Consolas','Menlo','Courier New',monospace;background:#0a0e14;color:#c8d1dc;font-size:13.5px;line-height:1.5}
-  ::-webkit-scrollbar{width:8px;height:8px}
-  ::-webkit-scrollbar-track{background:#0a0e14}
-  ::-webkit-scrollbar-thumb{background:#1f2937;border-radius:4px}
-  ::-webkit-scrollbar-thumb:hover{background:#374151}
-  #term{position:fixed;inset:0;display:flex;flex-direction:column;padding:14px 16px 0;overflow:hidden}
-  #out{flex:1;overflow-y:auto;overflow-x:hidden;white-space:pre-wrap;word-break:break-word;padding-bottom:14px;scroll-behavior:smooth}
-  #in-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0 14px;border-top:1px solid #16202a;flex-shrink:0}
-  #prompt{color:#52b788;font-weight:700;white-space:pre;flex-shrink:0;line-height:1.5}
-  #prompt .path{color:#7cc7ff}
-  #prompt .user{color:#ffd166}
-  #cmd{flex:1;background:transparent;border:0;outline:0;color:#c8d1dc;font:inherit;caret-color:#52b788;padding:0;min-width:0}
-  .line{padding:1px 0}
-  .err{color:#ff6b6b}
-  .ok{color:#52b788}
-  .warn{color:#ffd166}
-  .info{color:#7cc7ff}
-  .dim{color:#64748b}
-  .cmd-echo .u{color:#ffd166;font-weight:700}
-  .cmd-echo .p{color:#7cc7ff}
-  .dir{color:#7cc7ff;font-weight:700}
-  .file{color:#c8d1dc}
-  .exec{color:#52b788;font-weight:700}
-  .banner{color:#ff8fa3;font-weight:700}
-  .hl{background:#1e293b;padding:0 3px;border-radius:3px}
-  @media(max-width:640px){html,body{font-size:12px}#term{padding:10px 12px 0}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:'SF Mono','Consolas','Menlo',monospace;background:#0a0e14;color:#c8d1dc;font-size:13.5px;line-height:1.55}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:#0a0e14}
+::-webkit-scrollbar-thumb{background:#1f2937;border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#374151}
+#term{position:fixed;inset:0;display:flex;flex-direction:column;padding:14px 16px 0;overflow:hidden}
+#out{flex:1;overflow-y:auto;white-space:pre-wrap;word-break:break-word;padding-bottom:14px}
+#in-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0 14px;border-top:1px solid #16202a;flex-shrink:0}
+#prompt{color:#52b788;font-weight:700;white-space:pre;flex-shrink:0}
+#prompt .path{color:#7cc7ff}
+#prompt .user{color:#ffd166}
+#cmd{flex:1;background:transparent;border:0;outline:0;color:#c8d1dc;font:inherit;caret-color:#52b788;padding:0;min-width:0}
+.line{padding:1px 0}
+.err{color:#ff6b6b}.ok{color:#52b788}.warn{color:#ffd166}
+.info{color:#7cc7ff}.dim{color:#64748b}
+.cmd-echo .u{color:#ffd166;font-weight:700}
+.cmd-echo .p{color:#7cc7ff}
+.dir{color:#7cc7ff;font-weight:700}
+.file{color:#c8d1dc}
+.exec{color:#52b788;font-weight:700}
+.banner{color:#ff8fa3;font-weight:700}
+.hl{background:#1e293b;padding:0 3px;border-radius:3px}
+.exit-code{color:#ff8fa3}
+@media(max-width:640px){html,body{font-size:12px}#term{padding:10px 12px 0}}
 </style>
 </head>
 <body>
@@ -54,489 +52,848 @@ load.stop_parse.inta
 
 <script>
 (() => {
-  "use strict";
-  const $ = id => document.getElementById(id);
-  const out = $('out');
-  const cmd = $('cmd');
-  const promptEl = $('prompt');
+"use strict";
+const $ = id => document.getElementById(id);
+const out = $('out'), cmd = $('cmd'), promptEl = $('prompt');
 
-  /* ============================================================
-     WFS через postMessage (работает на file://)
-     ============================================================ */
-  const WFS = (() => {
-    const pending = new Map();
-    let reqId = 0;
-    const TIMEOUT = 8000;
+/* ============ WFS via postMessage ============ */
+const pending = new Map(); let reqId = 0;
+window.addEventListener('message', e => {
+  const d = e.data; if (!d || d.type !== 'wfs:res') return;
+  const p = pending.get(d.id); if (!p) return;
+  pending.delete(d.id); clearTimeout(p.timer);
+  d.ok ? p.resolve(d.data) : p.reject(new Error(d.error || 'WFS error'));
+});
+function wfs(cmd, ...args) {
+  return new Promise((res, rej) => {
+    const id = ++reqId;
+    const t = setTimeout(() => { pending.delete(id); rej(new Error('Таймаут')); }, 10000);
+    pending.set(id, { resolve: res, reject: rej, timer: t });
+    try { parent.postMessage({ type: 'wfs:req', id, cmd, args }, '*'); }
+    catch (e) { pending.delete(id); clearTimeout(t); rej(e); }
+  });
+}
 
-    window.addEventListener('message', e => {
-      const d = e.data;
-      if (!d || d.type !== 'wfs:res') return;
-      const p = pending.get(d.id);
-      if (!p) return;
-      pending.delete(d.id);
-      clearTimeout(p.timer);
-      if (d.ok) p.resolve(d.data);
-      else p.reject(new Error(d.error || 'Ошибка WFS'));
+/* ============ State ============ */
+const ENV = {};
+const ALIASES = {};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+let cwd = '/', user = 'user';
+let history = [], hIdx = 0;
+const HIST_KEY = 'wmos:melonci:hist';
+const ENV_KEY = 'wmos:melonci:env';
+const ALIAS_KEY = 'wmos:melonci:alias';
+try { history = JSON.parse(localStorage.getItem(HIST_KEY) || '[]') || []; } catch {}
+try { Object.assign(ENV, JSON.parse(localStorage.getItem(ENV_KEY) || '{}')); } catch {}
+try { Object.assign(ALIASES, JSON.parse(localStorage.getItem(ALIAS_KEY) || '{}')); } catch {}
+const saveAll = () => {
+  try { localStorage.setItem(HIST_KEY, JSON.stringify(history.slice(-200))); } catch {}
+  try { localStorage.setItem(ENV_KEY, JSON.stringify(ENV)); } catch {}
+  try { localStorage.setItem(ALIAS_KEY, JSON.stringify(ALIASES)); } catch {}
+};
+
+/* ============ Output ============ */
+function w(text, cls) {
+  const d = document.createElement('div');
+  d.className = 'line' + (cls ? ' ' + cls : '');
+  d.textContent = text;
+  out.appendChild(d);
+  out.scrollTop = out.scrollHeight;
+}
+function wh(html, cls) {
+  const d = document.createElement('div');
+  d.className = 'line' + (cls ? ' ' + cls : '');
+  d.innerHTML = html;
+  out.appendChild(d);
+  out.scrollTop = out.scrollHeight;
+}
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function updatePrompt() {
+  const home = '/home/' + user;
+  const shown = cwd === home ? '~' : cwd;
+  promptEl.innerHTML = `<span class="user">${esc(user)}</span>@<span class="dim">wmos</span>:<span class="path">${esc(shown)}</span>$&nbsp;`;
+}
+
+/* ============ Tokenizer ============ */
+function tokenize(line) {
+  const toks = []; let cur = '', q = null, sp = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (q) { if (c === q) { q = null; continue; } cur += c; continue; }
+    if (c === '"' || c === "'") { q = c; continue; }
+    if (' \t'.includes(c)) { if (cur) { toks.push(cur); cur = ''; sp = true; } continue; }
+    if ('|;&<>'.includes(c)) {
+      if (cur) { toks.push(cur); cur = ''; }
+      if (c === '&' && line[i+1] === '&') { toks.push('&&'); i++; }
+      else if (c === '|' && line[i+1] === '|') { toks.push('||'); i++; }
+      else if (c === '>' && line[i+1] === '>') { toks.push('>>'); i++; }
+      else toks.push(c);
+      continue;
+    }
+    cur += c;
+  }
+  if (cur) toks.push(cur);
+  return toks;
+}
+
+/* ============ Expansion ============ */
+async function expandArg(a) {
+  // $VAR / ${VAR}
+  a = a.replace(/\$\{(\w+)\}/g, (_, n) => ENV[n] ?? '');
+  a = a.replace(/\$(\w+)/g, (_, n) => ENV[n] ?? '');
+  // ~
+  if (a === '~' || a.startsWith('~/')) a = ('/home/' + user) + a.slice(1);
+  // wildcards
+  if (a.includes('*') || a.includes('?')) {
+    const dir = a.lastIndexOf('/') >= 0 ? a.slice(0, a.lastIndexOf('/')) : '.';
+    const pat = a.lastIndexOf('/') >= 0 ? a.slice(a.lastIndexOf('/') + 1) : a;
+    const searchDir = dir === '.' ? cwd : resolve(dir);
+    try {
+      const items = await wfs('ls', searchDir);
+      const re = new RegExp('^' + pat.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.') + '$');
+      return items.filter(it => re.test(it.name)).map(it => it.name);
+    } catch { return [a]; }
+  }
+  return [a];
+}
+async function expandArgs(args) {
+  const r = [];
+  for (const a of args) r.push(...await expandArg(a));
+  return r;
+}
+function resolve(p) {
+  if (!p) return cwd;
+  if (p.startsWith('/')) return normPath(p);
+  return normPath(cwd + '/' + p);
+}
+function normPath(p) {
+  const parts = p.split('/').filter(Boolean);
+  const out = [];
+  for (const x of parts) {
+    if (x === '.') continue;
+    if (x === '..') { out.pop(); continue; }
+    out.push(x);
+  }
+  return '/' + out.join('/');
+}
+
+/* ============ Commands ============ */
+const CMDS = {};
+const HELP = {};
+
+/* --- НАВИГАЦИЯ --- */
+CMDS.pwd = async () => ({ lines: [cwd] });
+HELP.pwd = 'pwd — текущая папка';
+
+CMDS.cd = async (args) => {
+  const target = args[0] ? resolve(args[0]) : '/home/' + user;
+  const st = await wfs('stat', target);
+  if (st.type !== 'dir') throw new Error('Не папка: ' + target);
+  cwd = target; updatePrompt();
+  return null;
+};
+HELP.cd = 'cd [путь] — перейти в папку';
+
+CMDS.ls = async (args) => {
+  const flags = args.filter(a => a.startsWith('-'));
+  const target = resolve(args.find(a => !a.startsWith('-')) || cwd);
+  const items = await wfs('ls', target);
+  if (!items.length) return { lines: [] };
+  items.sort((a, b) => a.type !== b.type ? (a.type === 'dir' ? -1 : 1) : a.name.localeCompare(b.name));
+  const long = flags.includes('-l') || flags.includes('-la') || flags.includes('-al');
+  const all = flags.includes('-a') || flags.includes('-la') || flags.includes('-al');
+  const filtered = all ? items : items.filter(it => !it.name.startsWith('.'));
+  if (long) {
+    const lines = filtered.map(it => {
+      const d = new Date(it.mtime);
+      const dt = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      const size = it.type === 'dir' ? '—' : String(it.size || 0);
+      const mark = it.type === 'dir' ? '/' : '';
+      return `${it.type === 'dir' ? 'd' : '-'}rw-r--r--  ${String(size).padStart(8)}  ${dt}  ${it.name}${mark}`;
     });
-
-    function call(cmd, ...args) {
-      return new Promise((resolve, reject) => {
-        const id = ++reqId;
-        const timer = setTimeout(() => {
-          if (pending.has(id)) {
-            pending.delete(id);
-            reject(new Error('Таймаут: WFS не отвечает'));
-          }
-        }, TIMEOUT);
-        pending.set(id, { resolve, reject, timer });
-        try {
-          window.parent.postMessage({ type: 'wfs:req', id, cmd, args }, '*');
-        } catch (err) {
-          pending.delete(id);
-          clearTimeout(timer);
-          reject(new Error('postMessage недоступен: ' + err.message));
-        }
-      });
-    }
-
-    const api = {
-      getUser() { return localStorage.getItem('wmos:melonci:user') || 'user'; }
-    };
-    ['ls','stat','exists','mkdir','mkdirp','write','append','read','readText','touch',
-     'rm','rmdir','mv','cp','du','df','find','listAll','norm','parentOf','basename']
-      .forEach(m => { api[m] = (...args) => call(m, ...args); });
-
-    api.init = async () => {
-      try { const u = await call('getUser'); if (u) localStorage.setItem('wmos:melonci:user', u); } catch {}
-      return true;
-    };
-    api.ready = api.init();
-
-    return api;
-  })();
-
-  /* ============================================================
-     STATE
-     ============================================================ */
-  let cwd = '/';
-  let username = WFS.getUser();
-  let history = [];
-  let hIdx = -1;
-  try { history = JSON.parse(localStorage.getItem('wmos:melonci:hist') || '[]') || []; } catch {}
-  const saveHist = () => { try { localStorage.setItem('wmos:melonci:hist', JSON.stringify(history.slice(-200))); } catch {} };
-
-  /* ============================================================
-     OUTPUT
-     ============================================================ */
-  function write(text, cls) {
-    const d = document.createElement('div');
-    d.className = 'line' + (cls ? ' ' + cls : '');
-    d.textContent = text;
-    out.appendChild(d);
-    out.scrollTop = out.scrollHeight;
+    return { lines };
   }
-  function writeHTML(html, cls) {
-    const d = document.createElement('div');
-    d.className = 'line' + (cls ? ' ' + cls : '');
-    d.innerHTML = html;
-    out.appendChild(d);
-    out.scrollTop = out.scrollHeight;
+  return { lines: filtered.map(it => it.name + (it.type === 'dir' ? '/' : '')) };
+};
+HELP.ls = 'ls [-l] [-a] [путь] — список файлов';
+
+CMDS.tree = async (args) => {
+  const root = resolve(args[0]);
+  const all = await wfs('listAll');
+  const map = new Map();
+  for (const n of all) {
+    const par = n.parent || '/';
+    if (!map.has(par)) map.set(par, []);
+    map.get(par).push(n);
   }
-  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
-  function updatePrompt() {
-    promptEl.innerHTML = `<span class="user">${esc(username)}</span>@<span class="dim">wmos</span>:<span class="path">${esc(cwd)}</span>$&nbsp;`;
+  const lines = [root + '/'];
+  function rec(path, prefix, isLast) {
+    const name = path.slice(path.lastIndexOf('/') + 1);
+    const node = all.find(n => n.path === path);
+    const isDir = node && node.type === 'dir';
+    lines.push(prefix + (isLast ? '└── ' : '├── ') + name + (isDir ? '/' : ''));
+    if (!isDir) return;
+    const kids = (map.get(path) || []).sort((a, b) => a.type !== b.type ? (a.type === 'dir' ? -1 : 1) : a.name.localeCompare(b.name));
+    kids.forEach((k, i) => rec(k.path, prefix + (isLast ? '    ' : '│   '), i === kids.length - 1));
   }
+  const kids = (map.get(root) || []).sort((a, b) => a.type !== b.type ? (a.type === 'dir' ? -1 : 1) : a.name.localeCompare(b.name));
+  kids.forEach((k, i) => rec(k.path, '', i === kids.length - 1));
+  return { lines };
+};
+HELP.tree = 'tree [путь] — дерево папок';
 
-  /* ============================================================
-     BANNER
-     ============================================================ */
-  write('');
-  writeHTML('<span class="banner">  ⌨️  MelonCI v1.0</span>');
-  writeHTML('<span class="dim">  Terminal for WatermelonOS · WFS via bridge</span>');
-  writeHTML('<span class="dim">  Напиши </span><span class="ok">help</span><span class="dim"> для списка команд</span>');
-  write('');
+/* --- ФАЙЛЫ --- */
+CMDS.touch = async (args) => {
+  if (!args.length) throw new Error('touch: нужен файл');
+  for (const a of args) {
+    const p = resolve(a);
+    await wfs('touch', p);
+    w('✓ ' + p, 'ok');
+  }
+  return null;
+};
+HELP.touch = 'touch <файл> — создать пустой файл';
 
-  /* ============================================================
-     COMMANDS
-     ============================================================ */
-  const resolve = p => p ? (p.startsWith('/') ? WFS.norm(p) : WFS.norm(cwd + '/' + p)) : cwd;
+CMDS.mkdir = async (args) => {
+  if (!args.length) throw new Error('mkdir: нужна папка');
+  for (const a of args) {
+    const p = resolve(a);
+    await wfs('mkdirp', p);
+    w('✓ ' + p, 'ok');
+  }
+  return null;
+};
+HELP.mkdir = 'mkdir <папка> — создать папку (с родителями)';
 
-  const CMDS = {
-    async help() {
-      writeHTML('<span class="info">Команды:</span>');
-      const g = [
-        ['Навигация','ls, cd, pwd, tree'],
-        ['Файлы','touch, cat, head, tail, wc, echo, write'],
-        ['Папки','mkdir, rm'],
-        ['Копир.','cp, mv'],
-        ['Поиск','find, grep'],
-        ['Инфо','stat, du, df, whoami, date'],
-        ['Система','apps, open, clear, history'],
-      ];
-      g.forEach(([a,b]) => writeHTML(`  <span class="warn">${a.padEnd(10)}</span> <span class="dim">${b}</span>`));
-      writeHTML('');
-      writeHTML('<span class="dim">Tab — автодополнение · ↑/↓ — история · Ctrl+L — очистка</span>');
-    },
+CMDS.cat = async (args, ctx) => {
+  if (!args.length && ctx.stdin) return { lines: ctx.stdin };
+  if (!args.length) throw new Error('cat: нужен файл');
+  const lines = [];
+  for (const a of args) {
+    const p = resolve(a);
+    const t = await wfs('readText', p);
+    lines.push(...String(t).split('\n'));
+  }
+  return { lines };
+};
+HELP.cat = 'cat <файл...> — вывести содержимое';
 
-    async ls(args) {
-      const path = resolve(args.find(a => !a.startsWith('-')));
-      const items = await WFS.ls(path);
-      if (!items.length) { write('пусто', 'dim'); return; }
-      items.sort((a,b) => a.type !== b.type ? (a.type === 'dir' ? -1 : 1) : a.name.localeCompare(b.name));
-      const long = args.includes('-l') || args.includes('-la');
-      if (long) {
-        for (const it of items) {
-          const d = new Date(it.mtime);
-          const dstr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-          const size = it.type === 'dir' ? '—' : String(it.size || 0);
-          const name = it.type === 'dir'
-            ? `<span class="dir">${esc(it.name)}/</span>`
-            : `<span class="file">${esc(it.name)}</span>`;
-          writeHTML(`  <span class="dim">${it.type === 'dir' ? 'DIR ' : 'FILE'}</span>  <span class="dim">${String(size).padStart(7)}</span>  <span class="dim">${dstr}</span>  ${name}`);
-        }
-      } else {
-        writeHTML('  ' + items.map(it => it.type === 'dir'
-          ? `<span class="dir">${esc(it.name)}/</span>`
-          : `<span class="file">${esc(it.name)}</span>`).join('   '));
-      }
-    },
+CMDS.head = async (args, ctx) => {
+  let n = 10;
+  const flags = args.filter(a => a.startsWith('-n'));
+  if (flags.length) n = parseInt(flags[0].slice(2)) || 10;
+  const files = args.filter(a => !a.startsWith('-'));
+  if (!files.length && ctx.stdin) return { lines: ctx.stdin.slice(0, n) };
+  if (!files.length) throw new Error('head: нужен файл');
+  const t = await wfs('readText', resolve(files[0]));
+  return { lines: String(t).split('\n').slice(0, n) };
+};
+HELP.head = 'head [-n N] <файл> — первые N строк';
 
-    async cd(args) {
-      let t = args[0] || '/';
-      if (t === '~') t = '/home/' + username;
-      t = resolve(t);
-      const st = await WFS.stat(t);
-      if (st.type !== 'dir') throw new Error('Не папка: ' + t);
-      cwd = t;
-      updatePrompt();
-    },
+CMDS.tail = async (args, ctx) => {
+  let n = 10;
+  const flags = args.filter(a => a.startsWith('-n'));
+  if (flags.length) n = parseInt(flags[0].slice(2)) || 10;
+  const files = args.filter(a => !a.startsWith('-'));
+  if (!files.length && ctx.stdin) return { lines: ctx.stdin.slice(-n) };
+  if (!files.length) throw new Error('tail: нужен файл');
+  const t = await wfs('readText', resolve(files[0]));
+  return { lines: String(t).split('\n').slice(-n) };
+};
+HELP.tail = 'tail [-n N] <файл> — последние N строк';
 
-    async pwd() { write(cwd); },
+CMDS.wc = async (args, ctx) => {
+  let text;
+  if (!args.length && ctx.stdin) text = ctx.stdin.join('\n');
+  else if (args.length) text = await wfs('readText', resolve(args[0]));
+  else throw new Error('wc: нужен файл');
+  const lines = String(text).split('\n').length;
+  const words = String(text).split(/\s+/).filter(Boolean).length;
+  const chars = String(text).length;
+  return { lines: [`${lines} строк  ${words} слов  ${chars} символов  ${args[0] || '<stdin>'}`] };
+};
+HELP.wc = 'wc [файл] — статистика текста';
 
-    async mkdir(args) {
-      if (!args.length) throw new Error('mkdir: нужен аргумент');
-      for (const a of args) {
-        const p = resolve(a);
-        await WFS.mkdir(p);
-        write('✓ ' + p, 'ok');
-      }
-    },
+CMDS.echo = async (args) => {
+  const expanded = [];
+  for (const a of args) expanded.push(...await expandArg(a));
+  return { lines: [expanded.join(' ')], raw: expanded.join(' ') };
+};
+HELP.echo = 'echo <текст> — вывести текст';
 
-    async touch(args) {
-      if (!args.length) throw new Error('touch: нужен аргумент');
-      const p = resolve(args[0]);
-      await WFS.touch(p);
-      write('✓ ' + p, 'ok');
-    },
+CMDS.write = async (args) => {
+  if (args.length < 2) throw new Error('write: <файл> <текст>');
+  const p = resolve(args[0]);
+  await wfs('write', p, args.slice(1).join(' '));
+  w('✓ ' + p, 'ok');
+  return null;
+};
+HELP.write = 'write <файл> <текст> — записать в файл';
 
-    async cat(args) {
-      if (!args.length) throw new Error('cat: нужен файл');
-      const p = resolve(args[0]);
-      const t = await WFS.readText(p);
-      String(t).split('\n').forEach(l => write(l));
-    },
+CMDS.rm = async (args) => {
+  const rec = args.some(a => /^-[rRf]+$/.test(a));
+  const files = args.filter(a => !a.startsWith('-'));
+  if (!files.length) throw new Error('rm: нужен файл');
+  for (const a of files) {
+    const p = resolve(a);
+    await wfs('rm', p, rec);
+    w('✓ ' + p, 'ok');
+  }
+  return null;
+};
+HELP.rm = 'rm [-r] <путь...> — удалить';
 
-    async head(args) {
-      const n = parseInt((args.find(a => a.startsWith('-n')) || '').slice(2)) || 10;
-      const file = args.find(a => !a.startsWith('-'));
-      if (!file) throw new Error('head: нужен файл');
-      const t = await WFS.readText(resolve(file));
-      String(t).split('\n').slice(0, n).forEach(l => write(l));
-    },
+CMDS.cp = async (args) => {
+  if (args.length < 2) throw new Error('cp: <откуда> <куда>');
+  await wfs('cp', resolve(args[0]), resolve(args[1]));
+  w('✓ скопировано', 'ok');
+  return null;
+};
+HELP.cp = 'cp <откуда> <куда> — копировать';
 
-    async tail(args) {
-      const n = parseInt((args.find(a => a.startsWith('-n')) || '').slice(2)) || 10;
-      const file = args.find(a => !a.startsWith('-'));
-      if (!file) throw new Error('tail: нужен файл');
-      const t = await WFS.readText(resolve(file));
-      String(t).split('\n').slice(-n).forEach(l => write(l));
-    },
+CMDS.mv = async (args) => {
+  if (args.length < 2) throw new Error('mv: <откуда> <куда>');
+  await wfs('mv', resolve(args[0]), resolve(args[1]));
+  w('✓ перемещено', 'ok');
+  return null;
+};
+HELP.mv = 'mv <откуда> <куда> — переместить';
 
-    async wc(args) {
-      if (!args.length) throw new Error('wc: нужен файл');
-      const t = await WFS.readText(resolve(args[0]));
-      const l = String(t).split('\n').length;
-      const w = String(t).split(/\s+/).filter(Boolean).length;
-      write(`${l} строк  ${w} слов  ${String(t).length} символов  ${args[0]}`);
-    },
+CMDS.stat = async (args) => {
+  if (!args.length) throw new Error('stat: нужен путь');
+  const p = resolve(args[0]);
+  const st = await wfs('stat', p);
+  return { lines: [
+    `  Путь:     ${p}`,
+    `  Имя:      ${st.name}`,
+    `  Тип:      ${st.type === 'dir' ? 'папка' : 'файл'}`,
+    `  Размер:   ${st.size} байт`,
+    `  Изменён:  ${new Date(st.mtime).toLocaleString('ru-RU')}`,
+    `  Создан:   ${new Date(st.created).toLocaleString('ru-RU')}`,
+  ] };
+};
+HELP.stat = 'stat <путь> — информация о файле';
 
-    async echo(args) {
-      const raw = args.join(' ');
-      const m = raw.match(/^(.*?)\s*(>>|>)\s*(\S+)\s*$/);
-      if (m) {
-        const [, text, op, file] = m;
-        const p = resolve(file);
-        if (op === '>') await WFS.write(p, text);
-        else await WFS.append(p, text + '\n');
-        write('✓ ' + p, 'ok');
-      } else write(raw);
-    },
+CMDS.find = async (args) => {
+  if (!args[0]) throw new Error('find: нужен шаблон (например *.txt)');
+  const results = await wfs('find', args[0], cwd);
+  return { lines: results.length ? results : ['Ничего не найдено'] };
+};
+HELP.find = 'find <шаблон> — поиск файлов по имени';
 
-    async write(args) {
-      if (args.length < 2) throw new Error('write: <файл> <текст>');
-      const p = resolve(args[0]);
-      await WFS.write(p, args.slice(1).join(' '));
-      write('✓ ' + p, 'ok');
-    },
+CMDS.grep = async (args, ctx) => {
+  const needle = args[0];
+  if (!needle) throw new Error('grep: нужен текст');
+  let text;
+  if (args.length >= 2) text = await wfs('readText', resolve(args[1]));
+  else if (ctx.stdin) text = ctx.stdin.join('\n');
+  else throw new Error('grep: <текст> <файл>');
+  const lines = String(text).split('\n').filter(l => l.includes(needle));
+  if (!lines.length) return { lines: [], empty: 'Совпадений нет' };
+  return { lines };
+};
+HELP.grep = 'grep <текст> [файл] — поиск по содержимому';
 
-    async rm(args) {
-      const rec = args.includes('-r') || args.includes('-rf');
-      const files = args.filter(a => !a.startsWith('-'));
-      if (!files.length) throw new Error('rm: нужен аргумент');
-      for (const f of files) {
-        const p = resolve(f);
-        await WFS.rm(p, rec);
-        write('✓ ' + p, 'ok');
-      }
-    },
+CMDS.du = async (args) => {
+  const p = resolve(args[0] || '.');
+  const size = await wfs('du', p);
+  return { lines: [`${(size/1024).toFixed(2)} КБ  ${p}`] };
+};
+HELP.du = 'du [путь] — размер папки';
 
-    async cp(args) {
-      if (args.length < 2) throw new Error('cp: <откуда> <куда>');
-      await WFS.cp(resolve(args[0]), resolve(args[1]));
-      write('✓ скопировано', 'ok');
-    },
+CMDS.df = async () => {
+  const { files, dirs, bytes, quota } = await wfs('df');
+  const pct = (bytes / quota * 100).toFixed(2);
+  const bars = Math.round(bytes / quota * 30);
+  return { lines: [
+    `  Файлов:  ${files}`,
+    `  Папок:   ${dirs}`,
+    `  Занято:  ${(bytes/1024).toFixed(2)} КБ из ${(quota/1024/1024).toFixed(0)} МБ`,
+    `  [${'█'.repeat(bars)}${'░'.repeat(Math.max(0, 30-bars))}] ${pct}%`
+  ] };
+};
+HELP.df = 'df — использование диска';
 
-    async mv(args) {
-      if (args.length < 2) throw new Error('mv: <откуда> <куда>');
-      await WFS.mv(resolve(args[0]), resolve(args[1]));
-      write('✓ перемещено', 'ok');
-    },
+/* --- ИНФОРМАЦИЯ --- */
+CMDS.whoami = async () => ({ lines: [user] });
+HELP.whoami = 'whoami — имя пользователя';
 
-    async stat(args) {
-      if (!args.length) throw new Error('stat: нужен путь');
-      const st = await WFS.stat(resolve(args[0]));
-      write(`  Имя:     ${st.name}`);
-      write(`  Тип:     ${st.type === 'dir' ? 'папка' : 'файл'}`);
-      write(`  Размер:  ${st.size} байт`);
-      write(`  Изменён: ${new Date(st.mtime).toLocaleString('ru-RU')}`);
-      write(`  Создан:  ${new Date(st.created).toLocaleString('ru-RU')}`);
-    },
+CMDS.date = async () => ({ lines: [new Date().toLocaleString('ru-RU')] });
+HELP.date = 'date — текущая дата и время';
 
-    async tree(args) {
-      const root = resolve(args[0]);
-      const all = await WFS.listAll();
-      const map = new Map();
-      for (const n of all) {
-        const par = n.parent || '/';
-        if (!map.has(par)) map.set(par, []);
-        map.get(par).push(n);
-      }
-      writeHTML(`<span class="dir">${esc(root)}/</span>`);
-      function rec(path, prefix, isLast) {
-        const name = WFS.basename(path);
-        const node = all.find(n => n.path === path);
-        const isDir = node && node.type === 'dir';
-        writeHTML(prefix + (isLast ? '└── ' : '├── ') +
-          (isDir ? `<span class="dir">${esc(name)}/</span>` : `<span class="file">${esc(name)}</span>`));
-        if (!isDir) return;
-        const kids = (map.get(path) || []).sort((a,b) => a.type !== b.type ? (a.type === 'dir' ? -1 : 1) : a.name.localeCompare(b.name));
-        kids.forEach((k, i) => rec(k.path, prefix + (isLast ? '    ' : '│   '), i === kids.length - 1));
-      }
-      const kids = (map.get(root) || []).sort((a,b) => a.type !== b.type ? (a.type === 'dir' ? -1 : 1) : a.name.localeCompare(b.name));
-      kids.forEach((k, i) => rec(k.path, '', i === kids.length - 1));
-    },
+CMDS.uname = async () => ({ lines: ['WatermelonOS 0.3.0 wmos-x86_64'] });
+HELP.uname = 'uname — информация об ОС';
 
-    async find(args) {
-      if (!args[0]) throw new Error('find: нужен шаблон (например *.txt)');
-      const results = await WFS.find(args[0], cwd);
-      if (!results.length) { write('Ничего не найдено', 'dim'); return; }
-      for (const p of results) {
-        const st = await WFS.stat(p);
-        writeHTML(st.type === 'dir' ? `<span class="dir">${esc(p)}/</span>` : `<span class="file">${esc(p)}</span>`);
-      }
-    },
+CMDS.hostname = async () => ({ lines: ['melon-pc'] });
+HELP.hostname = 'hostname — имя хоста';
 
-    async grep(args) {
-      if (args.length < 2) throw new Error('grep: <текст> <файл>');
-      const [needle, file] = args;
-      const text = await WFS.readText(resolve(file));
-      let found = 0;
-      String(text).split('\n').forEach((l, i) => {
-        if (l.includes(needle)) {
-          found++;
-          const re = new RegExp(needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
-          writeHTML(`<span class="dim">${String(i+1).padStart(4)}:</span> ` + esc(l).replace(re, `<span class="hl">${esc(needle)}</span>`));
-        }
-      });
-      if (!found) write('Совпадений нет', 'dim');
-    },
+CMDS.uptime = async (args, ctx) => {
+  const s = Math.floor(performance.now() / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return { lines: [`up ${h}ч ${m}м, 1 user, load avg: 0.00, 0.00, 0.00`] };
+};
+HELP.uptime = 'uptime — время работы';
 
-    async du(args) {
-      const p = resolve(args[0]);
-      const size = await WFS.du(p);
-      write(`${(size/1024).toFixed(2)} КБ  ${p}`);
-    },
+CMDS.calc = async (args) => {
+  const expr = args.join(' ');
+  if (!expr) throw new Error('calc: нужно выражение');
+  if (!/^[\d\s+\-*/().%^]+$/.test(expr)) throw new Error('calc: только цифры и +-*/().%');
+  const safe = expr.replace(/\^/g, '**');
+  try {
+    const val = Function('"use strict"; return (' + safe + ')')();
+    return { lines: [`= ${val}`] };
+  } catch { throw new Error('calc: ошибка выражения'); }
+};
+HELP.calc = 'calc <выражение> — посчитать (например: calc 2+2*3)';
 
-    async df() {
-      const { files, dirs, bytes, quota } = await WFS.df();
-      write(`  Файлов:  ${files}`);
-      write(`  Папок:   ${dirs}`);
-      write(`  Занято:  ${(bytes/1024).toFixed(2)} КБ из ${(quota/1024/1024).toFixed(0)} МБ`);
-      const pct = (bytes / quota * 100).toFixed(2);
-      const bars = Math.round(bytes / quota * 30);
-      writeHTML(`  <span class="dim">[${'█'.repeat(bars)}${'░'.repeat(Math.max(0,30-bars))}] ${pct}%</span>`);
-    },
+CMDS.rand = async (args) => {
+  const max = parseInt(args[0]) || 100;
+  return { lines: [String(Math.floor(Math.random() * max) + 1)] };
+};
+HELP.rand = 'rand [N] — случайное число от 1 до N';
 
-    async whoami() { write(username); },
+CMDS.sleep = async (args) => {
+  const s = parseFloat(args[0]) || 1;
+  await sleep(Math.min(s * 1000, 10000));
+  return null;
+};
+HELP.sleep = 'sleep <сек> — пауза';
 
-    async date() { write(new Date().toLocaleString('ru-RU')); },
+CMDS.base64 = async (args, ctx) => {
+  if (!args.length) throw new Error('base64: enc|dec <текст>');
+  const mode = args[0];
+  const text = args.slice(1).join(' ') || (ctx.stdin ? ctx.stdin.join('\n') : '');
+  try {
+    if (mode === 'enc') return { lines: [btoa(unescape(encodeURIComponent(text)))] };
+    if (mode === 'dec') return { lines: [decodeURIComponent(escape(atob(text)))] };
+  } catch { throw new Error('base64: ошибка'); }
+  throw new Error('base64: enc или dec');
+};
+HELP.base64 = 'base64 enc|dec <текст> — кодировать/декодировать';
 
-    async apps() {
-      try {
-        const pdoc = window.parent.document;
-        const icons = pdoc.querySelectorAll('.wmos-icon');
-        if (icons.length) {
-          writeHTML('<span class="info">Приложения на рабочем столе:</span>');
-          icons.forEach(ic => {
-            const name = ic.querySelector('.l')?.textContent || '?';
-            const icon = ic.querySelector('.e')?.textContent || '📦';
-            const id = ic.dataset.app || ic.dataset.appId || ic.dataset.inta || '';
-            writeHTML(`  ${icon}  <span class="exec">${esc(name)}</span> <span class="dim">(${esc(id)})</span>`);
-          });
-          return;
-        }
-      } catch {}
-      write('Список приложений недоступен', 'warn');
-    },
+CMDS.hash = async (args) => {
+  const text = args.join(' ');
+  if (!text) throw new Error('hash: нужен текст');
+  if (crypto.subtle) {
+    try {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+      const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+      return { lines: [hex] };
+    } catch {}
+  }
+  let h = 5381;
+  for (let i = 0; i < text.length; i++) h = ((h << 5) + h) ^ text.charCodeAt(i);
+  return { lines: ['fb' + (h >>> 0).toString(16)] };
+};
+HELP.hash = 'hash <текст> — SHA-256 (или фолбэк)';
 
-    async open(args) {
-      if (!args.length) throw new Error('open: нужен ID');
-      try {
-        window.parent.postMessage({ type: 'wmos:open', id: args[0] }, '*');
-        write('→ открываю: ' + args[0], 'ok');
-      } catch { write('Ошибка', 'err'); }
-    },
+/* --- ПЕРЕМЕННЫЕ --- */
+CMDS.env = async () => {
+  return { lines: Object.entries(ENV).map(([k, v]) => `${k}=${v}`) };
+};
+HELP.env = 'env — переменные окружения';
 
-    async clear() { out.innerHTML = ''; },
-    async history() { history.slice(-30).reverse().forEach((h,i) => write(`  ${String(i+1).padStart(3)}  ${h}`)); },
-    async exit() {
-      try { window.parent.postMessage({ type: 'wmos:close-app' }, '*'); } catch {}
-      write('Закрываю…', 'dim');
-    }
+CMDS.export = async (args) => {
+  if (!args.length) return CMDS.env();
+  const kv = args.join(' ');
+  const m = kv.match(/^(\w+)=(.*)$/);
+  if (!m) throw new Error('export VAR=value');
+  ENV[m[1]] = m[2];
+  saveAll();
+  return null;
+};
+HELP.export = 'export VAR=value — задать переменную';
+
+CMDS.unset = async (args) => {
+  if (!args.length) throw new Error('unset: <VAR>');
+  delete ENV[args[0]];
+  saveAll();
+  return null;
+};
+HELP.unset = 'unset <VAR> — удалить переменную';
+
+CMDS.alias = async (args) => {
+  if (!args.length) {
+    return { lines: Object.entries(ALIASES).map(([k, v]) => `alias ${k}='${v}'`) };
+  }
+  const m = args.join(' ').match(/^(\w+)=(.*)$/);
+  if (!m) throw new Error('alias name=value');
+  ALIASES[m[1]] = m[2].replace(/^['"]|['"]$/g, '');
+  saveAll();
+  return null;
+};
+HELP.alias = 'alias [name=value] — псевдонимы команд';
+
+CMDS.unalias = async (args) => {
+  if (!args.length) throw new Error('unalias: <name>');
+  delete ALIASES[args[0]];
+  saveAll();
+  return null;
+};
+HELP.unalias = 'unalias <name> — удалить псевдоним';
+
+CMDS.which = async (args) => {
+  if (!args.length) throw new Error('which: <команда>');
+  const name = args[0];
+  if (ALIASES[name]) return { lines: [`${name}: псевдоним → ${ALIASES[name]}`] };
+  if (CMDS[name]) return { lines: [`${name}: встроенная команда`] };
+  return { lines: [`${name}: не найдена`] };
+};
+HELP.which = 'which <команда> — где находится команда';
+
+/* --- СИСТЕМА --- */
+CMDS.clear = async () => { out.innerHTML = ''; return null; };
+HELP.clear = 'clear — очистить экран';
+
+CMDS.history = async () => {
+  const h = history.slice(-50).reverse();
+  return { lines: h.map((x, i) => `${String(i + 1).padStart(4)}  ${x}`) };
+};
+HELP.history = 'history — история команд';
+
+CMDS.help = async (args) => {
+  if (args[0] && HELP[args[0]]) {
+    return { lines: [HELP[args[0]]] };
+  }
+  const groups = {
+    'Навигация': ['pwd', 'cd', 'ls', 'tree'],
+    'Файлы': ['touch', 'cat', 'head', 'tail', 'wc', 'echo', 'write', 'rm', 'cp', 'mv', 'stat'],
+    'Поиск': ['find', 'grep'],
+    'Инфо': ['du', 'df', 'whoami', 'date', 'uname', 'hostname', 'uptime'],
+    'Утилиты': ['calc', 'rand', 'sleep', 'base64', 'hash'],
+    'Окружение': ['env', 'export', 'unset', 'alias', 'unalias', 'which'],
+    'Система': ['clear', 'history', 'help', 'man', 'exit', 'apps', 'open', 'edit', 'run']
   };
-
-  /* ============================================================
-     EXECUTION
-     ============================================================ */
-  function tokenize(s) {
-    const t = []; let cur = ''; let q = null;
-    for (const c of s) {
-      if (q) { if (c === q) q = null; else cur += c; }
-      else if (c === '"' || c === "'") q = c;
-      else if (c === ' ' || c === '\t') { if (cur) { t.push(cur); cur = ''; } }
-      else cur += c;
-    }
-    if (cur) t.push(cur);
-    return t;
+  const lines = ['Команды MelonCI:', ''];
+  for (const [name, cmds] of Object.entries(groups)) {
+    lines.push('  ' + name.padEnd(12) + ' ' + cmds.join(', '));
   }
+  lines.push('');
+  lines.push('Подсказки:');
+  lines.push('  Tab  — автодополнение');
+  lines.push('  ↑↓   — история команд');
+  lines.push('  Ctrl+L — очистить');
+  lines.push('  Ctrl+C — прервать строку');
+  lines.push('');
+  lines.push('Pipe и редиректы:');
+  lines.push('  cat file.txt | grep error | head -n 5');
+  lines.push('  echo "hi" > file.txt        # записать');
+  lines.push('  echo "more" >> file.txt     # дописать');
+  lines.push('  find *.txt ; ls /home       # несколько команд');
+  lines.push('');
+  lines.push('man <команда> — справка по команде');
+  return { lines };
+};
+HELP.help = 'help [команда] — справка';
 
-  async function execute(input) {
-    input = String(input).trim();
-    if (!input) return;
-    writeHTML(`<span class="u">${esc(username)}</span>@<span class="dim">wmos</span>:<span class="p">${esc(cwd)}</span>$ <span>${esc(input)}</span>`, 'cmd-echo');
-    history.push(input);
-    if (history.length > 200) history.shift();
-    saveHist();
-    hIdx = history.length;
+CMDS.man = async (args) => CMDS.help(args);
+HELP.man = 'man <команда> — справка по команде';
 
-    const tok = tokenize(input);
-    const name = tok[0];
-    const args = tok.slice(1);
-    const fn = CMDS[name];
-    if (!fn) {
-      write('Команда не найдена: ' + name, 'err');
-      write('Попробуй help', 'dim');
-      return;
-    }
-    try { await fn(args); }
-    catch (e) { write('✗ ' + (e.message || String(e)), 'err'); }
-  }
+CMDS.exit = async () => {
+  w('Закрываю…', 'dim');
+  try { parent.postMessage({ type: 'wmos:close-app' }, '*'); } catch {}
+  return null;
+};
+HELP.exit = 'exit — закрыть терминал';
 
-  /* ============================================================
-     INPUT
-     ============================================================ */
-  cmd.addEventListener('keydown', async e => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const v = cmd.value; cmd.value = '';
-      await execute(v);
-      hIdx = history.length;
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      if (!history.length) return;
-      hIdx = Math.max(0, hIdx - 1);
-      cmd.value = history[hIdx] || '';
-      setTimeout(() => cmd.setSelectionRange(cmd.value.length, cmd.value.length), 0);
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      hIdx = Math.min(history.length, hIdx + 1);
-      cmd.value = history[hIdx] || '';
-      setTimeout(() => cmd.setSelectionRange(cmd.value.length, cmd.value.length), 0);
-    } else if (e.key === 'Tab') {
-      e.preventDefault(); await autocomplete();
-    } else if (e.key === 'l' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault(); out.innerHTML = '';
-    } else if (e.key === 'c' && e.ctrlKey) {
-      e.preventDefault(); cmd.value = ''; write('^C', 'dim');
-    }
-  });
+CMDS.apps = async () => {
+  try {
+    const icons = parent.document.querySelectorAll('.wmos-icon');
+    if (!icons.length) return { lines: ['Список приложений недоступен'] };
+    const lines = ['Установленные приложения:', ''];
+    icons.forEach(ic => {
+      const name = ic.querySelector('.l')?.textContent || '?';
+      const icon = ic.querySelector('.e')?.textContent || '📦';
+      const id = ic.dataset.app || ic.dataset.appId || ic.dataset.inta || '';
+      lines.push(`  ${icon}  ${name.padEnd(28)} (${id})`);
+    });
+    return { lines };
+  } catch { return { lines: ['Список приложений недоступен'] }; }
+};
+HELP.apps = 'apps — список приложений';
 
-  async function autocomplete() {
-    const val = cmd.value;
-    const tok = tokenize(val);
-    if (tok.length <= 1 && !val.endsWith(' ')) {
-      const p = tok[0] || '';
-      const m = Object.keys(CMDS).filter(c => c.startsWith(p));
-      if (m.length === 1) cmd.value = m[0] + ' ';
-      else if (m.length > 1) writeHTML('  ' + m.map(x => `<span class="exec">${x}</span>`).join('  '));
-      return;
-    }
-    const partial = tok[tok.length - 1] || '';
-    const si = partial.lastIndexOf('/');
-    const dirPart = si >= 0 ? partial.slice(0, si) : '';
-    const filePart = si >= 0 ? partial.slice(si + 1) : partial;
-    const searchDir = dirPart ? resolve(dirPart) : cwd;
+CMDS.open = async (args) => {
+  if (!args[0]) throw new Error('open: нужен ID приложения');
+  try {
+    parent.postMessage({ type: 'wmos:open', id: args[0] }, '*');
+    w('→ открываю: ' + args[0], 'ok');
+  } catch { w('Ошибка', 'err'); }
+  return null;
+};
+HELP.open = 'open <id> — открыть приложение';
+
+/* --- РЕДАКТОР --- */
+CMDS.edit = async (args) => {
+  const file = args[0];
+  if (!file) throw new Error('edit: нужен файл');
+  const p = resolve(file);
+  let content = '';
+  try { content = await wfs('readText', p); } catch {}
+  const ed = document.createElement('div');
+  ed.style.cssText = 'position:fixed;inset:20px;background:#0d1218;border:1px solid #1f2937;border-radius:8px;display:flex;flex-direction:column;z-index:1000;box-shadow:0 20px 60px rgba(0,0,0,.7)';
+  ed.innerHTML = `
+    <div style="padding:10px 14px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center">
+      <span style="color:#7cc7ff;font-weight:700">📝 ${esc(p)}</span>
+      <span style="opacity:.5;font-size:11px">Ctrl+S — сохранить · Esc — выйти</span>
+    </div>
+    <textarea style="flex:1;background:transparent;border:0;outline:0;color:#c8d1dc;font:inherit;padding:14px;resize:none;white-space:pre;overflow:auto" spellcheck="false"></textarea>
+    <div style="padding:8px 14px;border-top:1px solid #1f2937;font-size:11px;opacity:.5" id="edStatus"></div>
+  `;
+  document.body.appendChild(ed);
+  const ta = ed.querySelector('textarea');
+  const st = ed.querySelector('#edStatus');
+  ta.value = content;
+  ta.focus();
+  function statusMsg(msg, cls) { st.textContent = msg; st.style.color = cls || ''; }
+  async function save() {
     try {
-      const items = await WFS.ls(searchDir);
-      const m = items.filter(it => it.name.startsWith(filePart))
-        .map(it => it.name + (it.type === 'dir' ? '/' : ''));
-      if (m.length === 1) {
-        cmd.value = val.slice(0, val.length - partial.length) + (dirPart ? dirPart + '/' : '') + m[0];
-      } else if (m.length > 1) {
-        writeHTML('  ' + m.map(x => x.endsWith('/')
-          ? `<span class="dir">${esc(x)}</span>`
-          : `<span class="file">${esc(x)}</span>`).join('  '));
+      await wfs('write', p, ta.value);
+      statusMsg('✓ сохранено ' + new Date().toLocaleTimeString('ru-RU'), '#52b788');
+    } catch (e) { statusMsg('✗ ' + e.message, '#ff6b6b'); }
+  }
+  ta.addEventListener('keydown', e => {
+    if (e.key === 's' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); save(); }
+    else if (e.key === 'Escape') { e.preventDefault(); ed.remove(); cmd.focus(); }
+  });
+  statusMsg('строк: ' + content.split('\n').length + ' · символов: ' + content.length);
+  w('Открыт редактор: ' + p, 'info');
+  return null;
+};
+HELP.edit = 'edit <файл> — открыть редактор';
+
+/* --- СКРИПТЫ --- */
+CMDS.run = async (args) => {
+  if (!args[0]) throw new Error('run: нужен файл .melon');
+  const p = resolve(args[0]);
+  const text = await wfs('readText', p);
+  const lines = String(text).split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    w(`> ${trimmed}`, 'dim');
+    await executeLine(trimmed);
+  }
+  return null;
+};
+HELP.run = 'run <файл.melon> — выполнить скрипт';
+
+/* ============ Executor ============ */
+async function runCommand(name, args, ctx) {
+  if (ALIASES[name]) {
+    const expanded = ALIASES[name].split(/\s+/).concat(args);
+    return await runCommand(expanded[0], expanded.slice(1), ctx);
+  }
+  const fn = CMDS[name];
+  if (!fn) throw new Error('Команда не найдена: ' + name);
+  return await fn(args, ctx);
+}
+
+async function executeSegment(tokens, stdin) {
+  // pipe split
+  const parts = [];
+  let cur = [];
+  for (const t of tokens) {
+    if (t === '|') { parts.push(cur); cur = []; }
+    else cur.push(t);
+  }
+  parts.push(cur);
+
+  let pipeInput = stdin;
+  let result = null;
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (!part.length) continue;
+
+    // редирект
+    let redirect = null;
+    let redirectAppend = false;
+    let inputFile = null;
+    const cleanPart = [];
+    for (let j = 0; j < part.length; j++) {
+      if (part[j] === '>' || part[j] === '>>') {
+        redirect = part[j]; redirectAppend = part[j] === '>>';
+        cleanPart.push('__REDIR__');
+        continue;
       }
-    } catch {}
+      if (part[j] === '<') {
+        inputFile = part[j + 1];
+        j++;
+        continue;
+      }
+      cleanPart.push(part[j]);
+    }
+
+    const name = cleanPart[0];
+    if (!name) continue;
+    let args = cleanPart.slice(1);
+
+    if (inputFile) {
+      try { pipeInput = (await wfs('readText', resolve(inputFile))).split('\n'); } catch {}
+    }
+
+    // расширение wildcards и переменных
+    args = await expandArgs(args);
+
+    const ctx = { cwd, stdin: pipeInput };
+    result = await runCommand(name, args, ctx);
+
+    if (result === null) { pipeInput = null; continue; }
+
+    if (result.lines) {
+      pipeInput = result.lines;
+      if (i === parts.length - 1) {
+        // последняя команда — вывод
+        if (redirect) {
+          const fileArg = cleanPart[cleanPart.indexOf('__REDIR__') + 1];
+          if (fileArg) {
+            const content = result.lines.join('\n');
+            const p = resolve(fileArg);
+            if (redirectAppend) await wfs('append', p, '\n' + content);
+            else await wfs('write', p, content);
+            w('✓ → ' + p, 'ok');
+          }
+        } else if (result.lines.length) {
+          for (const l of result.lines) w(l);
+          if (result.empty) w(result.empty, 'dim');
+        } else if (result.empty) w(result.empty, 'dim');
+      }
+    } else if (result.html) {
+      wh(result.html);
+      pipeInput = null;
+    }
   }
+  return result;
+}
 
-  /* ============================================================
-     INIT
-     ============================================================ */
-  WFS.ready.then(async () => {
-    try {
-      const u = await WFS.getUser();
-      if (u) username = u;
-    } catch {}
-    cwd = '/home/' + username;
-    try {
-      const st = await WFS.stat(cwd);
-      if (st.type !== 'dir') cwd = '/';
-    } catch { cwd = '/'; }
-    updatePrompt();
-    cmd.focus();
-  }).catch(err => {
-    write('✗ Ошибка инициализации WFS: ' + err.message, 'err');
-    write('Проверь, что мост WFS-Bridge вставлен в index.html', 'dim');
-    cwd = '/';
-    updatePrompt();
-  });
+async function executeLine(line) {
+  line = String(line).trim();
+  if (!line || line.startsWith('#')) return;
 
-  document.addEventListener('click', () => {
-    if (!window.getSelection().toString()) cmd.focus();
-  });
-  window.addEventListener('focus', () => cmd.focus());
+  // эхо
+  wh(`<span class="u">${esc(user)}</span>@<span class="dim">wmos</span>:<span class="p">${esc(cwd)}</span>$ <span>${esc(line)}</span>`, 'cmd-echo');
+
+  history.push(line);
+  if (history.length > 200) history.shift();
+  saveAll();
+  hIdx = history.length;
+
+  // разбиение по ; || &&
+  const tokens = tokenize(line);
+  const segments = [];
+  let cur = [];
+  let op = null;
+  for (const t of tokens) {
+    if (t === ';' || t === '&&' || t === '||') {
+      if (cur.length) segments.push({ tokens: cur, op });
+      cur = [];
+      op = t;
+    } else cur.push(t);
+  }
+  if (cur.length) segments.push({ tokens: cur, op });
+
+  let lastResult = null;
+  for (const seg of segments) {
+    // логика && ||
+    if (lastResult && lastResult.__error) {
+      if (seg.op === '&&') continue;
+    } else if (lastResult && !lastResult.__error) {
+      if (seg.op === '||') continue;
+    }
+    try {
+      lastResult = await executeSegment(seg.tokens, null);
+      if (lastResult) lastResult.__error = false;
+    } catch (e) {
+      w('✗ ' + (e.message || String(e)), 'err');
+      lastResult = { __error: true };
+    }
+  }
+}
+
+/* ============ Input ============ */
+cmd.addEventListener('keydown', async e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const v = cmd.value;
+    cmd.value = '';
+    try { await executeLine(v); } catch (err) { w('✗ ' + err.message, 'err'); }
+    hIdx = history.length;
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (!history.length) return;
+    hIdx = Math.max(0, hIdx - 1);
+    cmd.value = history[hIdx] || '';
+    setTimeout(() => cmd.setSelectionRange(cmd.value.length, cmd.value.length), 0);
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    hIdx = Math.min(history.length, hIdx + 1);
+    cmd.value = history[hIdx] || '';
+    setTimeout(() => cmd.setSelectionRange(cmd.value.length, cmd.value.length), 0);
+  } else if (e.key === 'Tab') {
+    e.preventDefault();
+    await autocomplete();
+  } else if (e.key === 'l' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault(); out.innerHTML = '';
+  } else if (e.key === 'c' && e.ctrlKey) {
+    e.preventDefault();
+    cmd.value = '';
+    w('^C', 'dim');
+  }
+});
+
+async function autocomplete() {
+  const val = cmd.value;
+  const toks = tokenize(val);
+  if (toks.length <= 1 && !val.endsWith(' ')) {
+    const p = toks[0] || '';
+    const matches = [...Object.keys(CMDS), ...Object.keys(ALIASES)].filter(c => c.startsWith(p));
+    if (matches.length === 1) cmd.value = matches[0] + ' ';
+    else if (matches.length > 1) w(matches.join('  '), 'info');
+    return;
+  }
+  const partial = toks[toks.length - 1] || '';
+  const si = partial.lastIndexOf('/');
+  const dirPart = si >= 0 ? partial.slice(0, si) : '';
+  const filePart = si >= 0 ? partial.slice(si + 1) : partial;
+  const searchDir = dirPart ? resolve(dirPart) : cwd;
+  try {
+    const items = await wfs('ls', searchDir);
+    const matches = items.filter(it => it.name.startsWith(filePart))
+      .map(it => it.name + (it.type === 'dir' ? '/' : ''));
+    if (matches.length === 1) {
+      const prefix = val.slice(0, val.length - partial.length);
+      cmd.value = prefix + (dirPart ? dirPart + '/' : '') + matches[0];
+    } else if (matches.length > 1) w(matches.join('  '), 'info');
+  } catch {}
+}
+
+/* ============ Boot ============ */
+w('');
+wh('<span class="banner">  ⌨️  MelonCI v2.0</span>');
+wh('<span class="dim">  WatermelonOS Terminal · WFS ready</span>');
+wh('<span class="dim">  Напиши </span><span class="ok">help</span><span class="dim"> · </span><span class="ok">man ls</span><span class="dim"> для справки</span>');
+wh('<span class="dim">  Pipe: </span><span class="info">cat file | grep x | head -n 5</span>');
+wh('<span class="dim">  Редирект: </span><span class="info">echo "hi" &gt; file.txt</span>');
+w('');
+
+(async () => {
+  try {
+    user = await wfs('getUser') || 'user';
+  } catch {}
+  try {
+    cwd = '/home/' + user;
+    const st = await wfs('stat', cwd);
+    if (st.type !== 'dir') cwd = '/';
+  } catch { cwd = '/'; }
+  updatePrompt();
+  cmd.focus();
+})();
+
+document.addEventListener('click', () => {
+  if (!window.getSelection().toString()) cmd.focus();
+});
+window.addEventListener('focus', () => cmd.focus());
 })();
 </script>
 </body>
